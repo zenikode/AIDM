@@ -241,10 +241,9 @@ async function loadSceneFromAI() {
     addLog('Отправляем запрос к нейросети...', 'debug');
     addLog('Сообщение пользователя: "Загрузи сцену"', 'info');
     
-    const resp = await callOpenRouterAPI(conversationHistory);
+    const response = await callOpenRouterAPI(conversationHistory);
     
-    if (resp) {
-const response = extractJsonFromMarkdown (resp.text());
+    if (response) {
       addLog('Получен ответ от нейросети', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
       addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
@@ -252,7 +251,7 @@ const response = extractJsonFromMarkdown (resp.text());
       // Парсим JSON ответ
       let sceneData;
       try {
-        sceneData = JSON.parse(response);
+        sceneData = JSON.parse(extractJsonFromMarkdown (response));
         addLog('JSON успешно распарсен', 'success');
     } catch (e) {
         addLog('Ошибка парсинга JSON, запрашиваем переформатирование', 'warning');
@@ -341,10 +340,9 @@ async function sendChoiceToAI(choice) {
     const userMessage = `Игрок выбрал: "${choice.text}" (ID: ${choice.id}). Текущее состояние персонажа: ${JSON.stringify(player, null, 2)}. Создай следующую сцену на основе этого выбора.`;
     addLog(`Сообщение пользователя: "${userMessage.substring(0, 200)}..."`, 'info');
     
-    const resp = await callOpenRouterAPI(conversationHistory);
+    const response = await callOpenRouterAPI(conversationHistory);
     
-    if (resp) {
-const response = extractJsonFromMarkdown (resp.text());
+    if (response) {
       addLog('Получен ответ от нейросети на выбор игрока', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
       addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
@@ -352,7 +350,7 @@ const response = extractJsonFromMarkdown (resp.text());
       // Парсим JSON ответ
       let sceneData;
       try {
-        sceneData = JSON.parse(response);
+        sceneData = JSON.parse(extractJsonFromMarkdown(response));
         addLog('JSON ответ успешно распарсен', 'success');
       } catch (e) {
         addLog('Ошибка парсинга JSON ответа, запрашиваем переформатирование', 'warning');
