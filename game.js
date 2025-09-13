@@ -241,7 +241,7 @@ async function loadSceneFromAI() {
     addLog('Отправляем запрос к нейросети...', 'debug');
     addLog('Сообщение пользователя: "Загрузи сцену"', 'info');
     
-    const response = await callOpenRouterAPI(conversationHistory);
+    var response = await callOpenRouterAPI(conversationHistory);
     
     if (response) {
 response = extractJsonFromMarkdown (response);
@@ -341,7 +341,7 @@ async function sendChoiceToAI(choice) {
     const userMessage = `Игрок выбрал: "${choice.text}" (ID: ${choice.id}). Текущее состояние персонажа: ${JSON.stringify(player, null, 2)}. Создай следующую сцену на основе этого выбора.`;
     addLog(`Сообщение пользователя: "${userMessage.substring(0, 200)}..."`, 'info');
     
-    const response = await callOpenRouterAPI(conversationHistory);
+    var response = await callOpenRouterAPI(conversationHistory);
     
     if (response) {
 response = extractJsonFromMarkdown (response);
