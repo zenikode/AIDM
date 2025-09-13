@@ -241,10 +241,10 @@ async function loadSceneFromAI() {
     addLog('Отправляем запрос к нейросети...', 'debug');
     addLog('Сообщение пользователя: "Загрузи сцену"', 'info');
     
-    var resp = await callOpenRouterAPI(conversationHistory);
+    const resp = await callOpenRouterAPI(conversationHistory);
     
     if (resp) {
-response = extractJsonFromMarkdown (resp.text());
+const response = extractJsonFromMarkdown (resp.text());
       addLog('Получен ответ от нейросети', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
       addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
@@ -341,10 +341,10 @@ async function sendChoiceToAI(choice) {
     const userMessage = `Игрок выбрал: "${choice.text}" (ID: ${choice.id}). Текущее состояние персонажа: ${JSON.stringify(player, null, 2)}. Создай следующую сцену на основе этого выбора.`;
     addLog(`Сообщение пользователя: "${userMessage.substring(0, 200)}..."`, 'info');
     
-    var resp = await callOpenRouterAPI(conversationHistory);
+    const resp = await callOpenRouterAPI(conversationHistory);
     
     if (resp) {
-response = extractJsonFromMarkdown (resp.text());
+const response = extractJsonFromMarkdown (resp.text());
       addLog('Получен ответ от нейросети на выбор игрока', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
       addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
