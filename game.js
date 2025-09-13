@@ -24,6 +24,34 @@ function loadSettings() {
   }
 }
 
+function extractJsonFromMarkdown(markdown) {
+  // Шаг 1: Попробуем распарсить всю строку как JSON (если это чистый JSON)
+  try {
+    const parsed = JSON.parse(markdown.trim());
+    return parsed; // Успешно — возвращаем объект
+  } catch (e) {
+    // Не удалось — продолжаем поиск в Markdown-блоках
+  }
+
+  // Шаг 2: Ищем код-блоки с json
+  const jsonCodeBlockRegex = /```(?:json|JSON)\s*([\s\S]*?)\s*```/g;
+  let match;
+
+  while ((match = jsonCodeBlockRegex.exec(markdown)) !== null) {
+    const jsonStr = match[1].trim();
+
+    try {
+      const parsed = JSON.parse(jsonStr);
+      return parsed; // Возвращаем первый найденный валидный JSON
+    } catch (e) {
+      console.warn('Невалидный JSON в блоке:', jsonStr.substring(0, 100) + '...');
+    }
+  }
+
+  // Если ничего не нашлось — возвращаем null
+  return null;
+}
+
 // === Функции для работы с консолью логов ===
 function addLog(message, type = 'info') {
   const consoleLogs = document.getElementById('console-logs');
@@ -216,6 +244,7 @@ async function loadSceneFromAI() {
     const response = await callOpenRouterAPI(conversationHistory);
     
     if (response) {
+response = extractJsonFromMarkdown (response);
       addLog('Получен ответ от нейросети', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
       addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
@@ -315,6 +344,7 @@ async function sendChoiceToAI(choice) {
     const response = await callOpenRouterAPI(conversationHistory);
     
     if (response) {
+response = extractJsonFromMarkdown (response);
       addLog('Получен ответ от нейросети на выбор игрока', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
       addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
