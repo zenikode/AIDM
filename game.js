@@ -310,7 +310,7 @@ async function initializeSession() {
     if (response) {
       addLog('Получен ответ от нейросети', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
-      addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
+      addLog(response, 'debug');
       
       sessionInitialized = true;
       window.sessionInitialized = true;
@@ -358,7 +358,7 @@ async function loadSceneFromAI() {
     if (response) {
       addLog('Получен ответ от нейросети', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
-      addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
+      addLog(response, 'debug');
       
       // Парсим JSON ответ
       let sceneData;
@@ -460,7 +460,7 @@ async function sendChoiceToAI(choice, onError) {
     if (response) {
       addLog('Получен ответ от нейросети на выбор игрока', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
-      addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
+      addLog(response, 'debug');
       
       // Парсим JSON ответ
       let sceneData;
@@ -523,6 +523,9 @@ function renderScene(data) {
   if (statsRowHorizontal) {
     statsRowHorizontal.innerHTML = '';
     if (data.stats?.visible !== false) {
+      // HP + MP в одной строке
+      const hpmpRow = document.createElement('div');
+      hpmpRow.className = 'hp-mp-row';
       // HP
       const hpDiv = document.createElement('div');
       hpDiv.className = 'stat-horiz-item stat-hpmp';
@@ -531,7 +534,7 @@ function renderScene(data) {
         <span class="stat-horiz-label">HP</span>
         <span class="stat-horiz-hpmp-value hp">${player.hp ?? '?'}</span>
       `;
-      statsRowHorizontal.appendChild(hpDiv);
+      hpmpRow.appendChild(hpDiv);
       // MP
       const mpDiv = document.createElement('div');
       mpDiv.className = 'stat-horiz-item stat-hpmp';
@@ -540,8 +543,9 @@ function renderScene(data) {
         <span class="stat-horiz-label">MP</span>
         <span class="stat-horiz-hpmp-value mp">${player.mp ?? '?'}</span>
       `;
-      statsRowHorizontal.appendChild(mpDiv);
-      // Основные характеристики
+      hpmpRow.appendChild(mpDiv);
+      statsRowHorizontal.appendChild(hpmpRow);
+      // Основные характеристики — по одной на строку
       const statNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
       const icons = data.stats?.icons || ['💪', '🤸', '🛡️', '🧠', '🦉', '🎭'];
       const labels = data.stats?.labels || ['Сила', 'Ловкость', 'Телосложение', 'Интеллект', 'Мудрость', 'Харизма'];
@@ -579,7 +583,22 @@ function renderScene(data) {
           ${ab.cost ? `<span class="ability-cost">${ab.cost}</span>` : ''}
         </div>
         <div class="ability-desc">${ab.desc}</div>
+        ${ab.usage ? `<div class="ability-usage">${ab.usage}</div>` : ''}
       `;
+      if (ab.usage) {
+        div.style.cursor = 'pointer';
+        div.title = 'Вставить пример использования';
+        div.onclick = () => {
+          const input = document.getElementById('choice-input');
+          if (input) {
+            if (input.value && !input.value.endsWith(' ')) {
+              input.value += ' ';
+            }
+            input.value += ab.usage;
+            input.focus();
+          }
+        };
+      }
       abilitiesPanel.appendChild(div);
     });
   }
@@ -671,7 +690,7 @@ async function sendTextActionToAI(actionText, onError) {
     if (response) {
       addLog('Получен ответ от нейросети на действие игрока', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
-      addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
+      addLog(response, 'debug');
       let sceneData;
       try {
         sceneData = JSON.parse(extractJsonFromMarkdown(response));
