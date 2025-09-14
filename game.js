@@ -174,7 +174,8 @@ async function initializeSession() {
     "str": 15, "dex": 12, "con": 14, "int": 10, "wis": 13, "cha": 11,
     "hp": 20, "mp": 10
   },
-"enemy": {
+// только если враг действительно есть на сцене
+"enemy": { 
     "name": "Враг",
     "hp": 30,
     "ac": 13,
