@@ -172,8 +172,7 @@ async function initializeSession() {
   "player": {
     "name": "Имя персонажа",
     "str": 15, "dex": 12, "con": 14, "int": 10, "wis": 13, "cha": 11,
-    "hp": 20, "mp": 10,
-    "attack": 5, "gold": 100, "potions": 3
+    "hp": 20, "mp": 10
   },
   "stats": {
     "visible": true,
@@ -189,7 +188,7 @@ async function initializeSession() {
 
 Начни с вводной сцены для нового персонажа. 
 
-Отвечай без использования каких-либо блоков кода, markdown-разметки. Представляй информацию в чистом тексте. `;
+Отвечай json файлами указанной структуры без markdown-разметки. `;
 
   try {
     addLog('Отправляем запрос к нейросети...', 'debug');
@@ -435,28 +434,6 @@ function renderScene(data) {
   const abilitiesPanel = document.getElementById('abilities');
   if (abilitiesPanel) {
     abilitiesPanel.innerHTML = '';
-    
-    // Добавляем основные параметры как навыки
-    const coreAbilities = [
-      { 
-        icon: '⚔️', 
-        name: 'Атака', 
-        desc: `Урон: ${player.attack ?? '?'}`,
-        value: player.attack ?? '?'
-      },
-      { 
-        icon: '💰', 
-        name: 'Золото', 
-        desc: `Монеты: ${player.gold ?? '?'}`,
-        value: player.gold ?? '?'
-      },
-      { 
-        icon: '🧪', 
-        name: 'Зелья', 
-        desc: `Количество: ${player.potions ?? '?'}`,
-        value: player.potions ?? '?'
-      }
-    ];
 
     // Добавляем основные параметры
     coreAbilities.forEach(ab => {
