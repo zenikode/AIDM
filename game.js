@@ -6,6 +6,7 @@ let selectedModel = 'openai/gpt-oss-20b:free'; // Модель по умолча
 let sessionInitialized = false;
 let conversationHistory = [];
 let promptText = '';
+let defaultSettingText = '';
 
 // === Функции для работы с localStorage ===
 function saveSettings() {
@@ -102,12 +103,84 @@ async function loadPrompt() {
   }
 }
 
+async function loadDefaultSetting() {
+  try {
+    const resp = await fetch('default_setting.txt');
+    if (!resp.ok) throw new Error('Не удалось загрузить default_setting.txt');
+    defaultSettingText = await resp.text();
+  } catch (e) {
+    defaultSettingText = 'Панк в киберпанке с панкреатитом на танке играет в петанк в парке города Тарков. Ооо, это будет жарко!';
+  }
+}
+
+function saveSetting() {
+  const storyPrompt = document.getElementById('init-story-prompt');
+  if (storyPrompt) {
+    localStorage.setItem('dnd_setting', storyPrompt.value);
+  }
+}
+
+function loadSetting() {
+  return localStorage.getItem('dnd_setting') || '';
+}
+
+// === Управление UI области выбора ===
+function updateChoiceAreaUI(isLoading = false) {
+  const initSessionMain = document.getElementById('init-session-main');
+  const storyPrompt = document.getElementById('init-story-prompt');
+  const suggestionsDiv = document.getElementById('choices-suggestions');
+  const input = document.getElementById('choice-input');
+  const sendBtn = document.getElementById('choice-send-btn');
+  const inputHeroName = document.getElementById('input-hero-name');
+  const cardContentRow = document.getElementById('card-content-row');
+
+  if (!window.sessionInitialized) {
+    if (initSessionMain) {
+      initSessionMain.style.display = 'block';
+      initSessionMain.disabled = !!isLoading;
+      if (isLoading) {
+        initSessionMain.textContent = 'Загрузка...';
+      } else {
+        initSessionMain.textContent = 'Начать игру';
+      }
+    }
+    if (storyPrompt) {
+      storyPrompt.style.display = '';
+      storyPrompt.disabled = !!isLoading;
+    }
+    if (suggestionsDiv) suggestionsDiv.style.display = 'none';
+    if (input) input.style.display = 'none';
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (inputHeroName) inputHeroName.style.display = 'none';
+    if (cardContentRow) cardContentRow.classList.add('hidden');
+  } else {
+    if (initSessionMain) initSessionMain.style.display = 'none';
+    if (storyPrompt) {
+      storyPrompt.style.display = 'none';
+      storyPrompt.disabled = false;
+    }
+    if (suggestionsDiv) suggestionsDiv.style.display = '';
+    if (input) {
+      input.style.display = '';
+      input.disabled = !!isLoading;
+    }
+    if (sendBtn) {
+      sendBtn.style.display = '';
+      sendBtn.disabled = !!isLoading;
+      sendBtn.textContent = isLoading ? 'Отправка...' : 'Отправить';
+    }
+    if (inputHeroName) inputHeroName.style.display = '';
+    if (cardContentRow) cardContentRow.classList.remove('hidden');
+  }
+}
+
 // === Инициализация при загрузке ===
 window.onload = async () => {
   // Загружаем сохраненные настройки
   loadSettings();
   // Загружаем промпт
   await loadPrompt();
+  await loadDefaultSetting();
   
   // Показываем инструкцию
   const storyText = document.getElementById('story-text');
@@ -154,6 +227,51 @@ window.onload = async () => {
       console.log('Выбрана модель:', selectedModel);
     });
   }
+
+  // Панель DM overlay toggle
+  const toggleDMBtn = document.getElementById('toggle-dm-panel');
+  const dmOverlay = document.getElementById('dm-overlay');
+  if (toggleDMBtn && dmOverlay) {
+    toggleDMBtn.onclick = () => {
+      dmOverlay.style.display = 'flex';
+    };
+    dmOverlay.onclick = (e) => {
+      if (e.target === dmOverlay) {
+        dmOverlay.style.display = 'none';
+      }
+    };
+  }
+
+  updateChoiceAreaUI();
+  // Установить дефолтное пожелание, если поле пустое
+  const storyPrompt = document.getElementById('init-story-prompt');
+  if (storyPrompt) {
+    const saved = loadSetting();
+    if (saved) {
+      storyPrompt.value = saved;
+    } else {
+      storyPrompt.value = defaultSettingText;
+    }
+    storyPrompt.addEventListener('input', saveSetting);
+  }
+  // Дружелюбный стартовый текст
+  if (storyText) {
+    storyText.textContent = 'Добро пожаловать в D&D Game!\n\nПридумайте пожелания к сеттингу и нажмите "Начать игру".';
+  }
+  // Кнопка инициализации (главная)
+  const initSessionMain = document.getElementById('init-session-main');
+  if (initSessionMain) {
+    initSessionMain.onclick = async () => {
+      updateChoiceAreaUI(true);
+      await initializeSession();
+      updateChoiceAreaUI();
+      const storyPrompt = document.getElementById('init-story-prompt');
+      if (storyPrompt) {
+        storyPrompt.value = defaultSettingText;
+        saveSetting();
+      }
+    };
+  }
 };
 
 
@@ -162,8 +280,9 @@ window.onload = async () => {
 // Инициализация сессии с нейросетью
 async function initializeSession() {
   if (!apiKey) {
-    showApiStatus('❌ Введите API ключ OpenRouter', 'error');
+    showApiStatus('❌ Необходимо добавить API ключ в настройках (🛠️ вверху справа)', 'error');
     addLog('Ошибка: API ключ не введен', 'error');
+    updateChoiceAreaUI();
     return;
   }
 
@@ -172,14 +291,20 @@ async function initializeSession() {
   addLog(`Используем модель: ${selectedModel}`, 'debug');
 
   const systemPrompt = promptText;
+  // Получаем пожелания/предысторию
+  let userPrompt = "Создай вводную сцену для нового персонажа в D&D. Начни с создания персонажа и первой сцены приключения.";
+  const storyPrompt = document.getElementById('init-story-prompt');
+  if (storyPrompt && storyPrompt.value.trim()) {
+    userPrompt += "\n\nПожелания игрока: " + storyPrompt.value.trim();
+  }
 
   try {
     addLog('Отправляем запрос к нейросети...', 'debug');
-    addLog('Сообщение пользователя: "Создай вводную сцену для нового персонажа в D&D. Начни с создания персонажа и первой сцены приключения."', 'info');
+    addLog('Сообщение пользователя: ' + JSON.stringify(userPrompt), 'info');
     
     const response = await callOpenRouterAPI([
       { role: "system", content: systemPrompt },
-      { role: "user", content: "Создай вводную сцену для нового персонажа в D&D. Начни с создания персонажа и первой сцены приключения." }
+      { role: "user", content: userPrompt }
     ]);
 
     if (response) {
@@ -188,9 +313,11 @@ async function initializeSession() {
       addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
       
       sessionInitialized = true;
+      window.sessionInitialized = true;
+      updateChoiceAreaUI();
       conversationHistory = [
         { role: "system", content: systemPrompt },
-        { role: "user", content: "Создай вводную сцену для нового персонажа в D&D. Начни с создания персонажа и первой сцены приключения." },
+        { role: "user", content: userPrompt },
         { role: "assistant", content: response }
       ];
       
@@ -205,6 +332,7 @@ async function initializeSession() {
   } catch (error) {
     showApiStatus(`❌ Ошибка инициализации: ${error.message}`, 'error');
     addLog(`Ошибка инициализации: ${error.message}`, 'error');
+    updateChoiceAreaUI();
   }
 }
 
@@ -213,12 +341,14 @@ async function loadSceneFromAI() {
   if (!sessionInitialized) {
     showApiStatus('❌ Сначала инициализируйте сессию', 'error');
     addLog('Ошибка: сессия не инициализирована', 'error');
+    updateChoiceAreaUI();
     return;
   }
 
   showApiStatus('🔄 Загрузка сцены от нейросети...', 'loading');
   addLog('Загружаем сцену от нейросети...', 'info');
 
+  updateChoiceAreaUI(true);
   try {
     addLog('Отправляем запрос к нейросети...', 'debug');
     addLog('Сообщение пользователя: "Загрузи сцену"', 'info');
@@ -257,10 +387,12 @@ async function loadSceneFromAI() {
       renderScene(sceneData);
       showApiStatus('✅ Сцена загружена!', 'success');
       addLog('Сцена успешно загружена и отображена', 'success');
+      updateChoiceAreaUI();
     }
   } catch (error) {
     showApiStatus(`❌ Ошибка загрузки сцены: ${error.message}`, 'error');
     addLog(`Ошибка загрузки сцены: ${error.message}`, 'error');
+    updateChoiceAreaUI();
   }
 }
 
@@ -317,6 +449,7 @@ async function sendChoiceToAI(choice, onError) {
     content: `Игрок выбрал: "${choice.text}" (ID: ${choice.id}). Текущее состояние персонажа: ${JSON.stringify(player, null, 2)}. Создай следующую сцену на основе этого выбора.`
   });
 
+  updateChoiceAreaUI(true);
   try {
     addLog('Отправляем выбор нейросети...', 'debug');
     const userMessage = `Игрок выбрал: "${choice.text}" (ID: ${choice.id}). Текущее состояние персонажа: ${JSON.stringify(player, null, 2)}. Создай следующую сцену на основе этого выбора.`;
@@ -356,11 +489,13 @@ async function sendChoiceToAI(choice, onError) {
       renderScene(sceneData);
       showApiStatus('✅ Сцена обновлена!', 'success');
       addLog('Сцена успешно обновлена на основе выбора игрока', 'success');
+      updateChoiceAreaUI();
     }
   } catch (error) {
     showApiStatus(`❌ Ошибка отправки выбора: ${error.message}`, 'error');
     addLog(`Ошибка отправки выбора: ${error.message}`, 'error');
     if (typeof onError === 'function') onError();
+    updateChoiceAreaUI();
   }
 }
 
@@ -376,11 +511,12 @@ function renderScene(data) {
   if (document.getElementById('page-title')) {
     document.getElementById('page-title').textContent = data.title || '';
   }
-  document.getElementById('game-title').textContent = data.subtitle || data.title || 'Игра';
+  const headerTitle = document.getElementById('header-title');
+  if (headerTitle) headerTitle.textContent = data.subtitle || data.title || 'Игра';
 
   // Имя персонажа
-  const charNameEl = document.getElementById('char-name');
-  if (charNameEl) charNameEl.textContent = player.name || 'Герой';
+  const charNameInline = document.getElementById('char-name-inline');
+  if (charNameInline) charNameInline.textContent = player.name || 'Герой';
 
   // Характеристики + HP/MP (горизонтальная строка)
   const statsRowHorizontal = document.getElementById('stats-row-horizontal');
@@ -463,38 +599,46 @@ function renderScene(data) {
   }
 
   // Текст
-  const storyText = document.getElementById('story-text');
-  storyText.textContent = '';
-  typeWriter(data.text || 'Нет данных.', storyText, () => {
-    const choicesContainer = document.getElementById('choices');
-    if (choicesContainer) {
-      choicesContainer.innerHTML = '';
-      (data.choices || []).forEach((choice, idx) => {
+  const storyTextEl = document.getElementById('story-text');
+  if (storyTextEl) storyTextEl.textContent = '';
+  typeWriter(data.text || 'Нет данных.', storyTextEl, () => {
+    // Область выбора с автоподстановкой
+    const suggestionsDiv = document.getElementById('choices-suggestions');
+    const input = document.getElementById('choice-input');
+    const sendBtn = document.getElementById('choice-send-btn');
+    if (window.sessionInitialized && suggestionsDiv && input && sendBtn) {
+      suggestionsDiv.innerHTML = '';
+      (data.choices || []).forEach(choice => {
         const btn = document.createElement('button');
-        btn.className = 'choice-btn';
+          btn.className = 'suggestion-btn';
         btn.textContent = choice.text;
-        btn.disabled = false;
         btn.onclick = () => {
-          if (sessionInitialized) {
-            const allBtns = choicesContainer.querySelectorAll('button');
-            allBtns.forEach(b => {
-              b.disabled = true;
-              b.classList.remove('choice-selected');
-            });
-            btn.classList.add('choice-selected');
-            sendChoiceToAI(choice, () => {
-              allBtns.forEach(b => {
-                b.disabled = false;
-                b.classList.remove('choice-selected');
-              });
-            });
-          } else {
-            addLog('Ошибка: сессия не инициализирована, нельзя отправить выбор', 'error');
-            alert('❌ Сначала инициализируйте сессию с нейросетью!');
+            input.value = choice.text;
+            input.focus();
+          };
+          suggestionsDiv.appendChild(btn);
+        });
+        input.value = '';
+        input.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Отправить';
+        // Отправка действия
+        function sendAction() {
+          const actionText = input.value.trim();
+          if (!actionText) return;
+          suggestionsDiv.innerHTML = '';
+          updateChoiceAreaUI(true);
+          sendTextActionToAI(actionText, () => {
+            updateChoiceAreaUI();
+          });
+        }
+        sendBtn.onclick = sendAction;
+        input.onkeydown = e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            sendAction();
           }
         };
-        choicesContainer.appendChild(btn);
-      });
     }
   });
 }
@@ -510,4 +654,90 @@ function typeWriter(text, el, callback) {
     } else if (callback) callback();
   };
   typing();
+}
+
+// Новая функция отправки действия
+async function sendTextActionToAI(actionText, onError) {
+  showApiStatus('🔄 Отправка действия нейросети...', 'loading');
+  addLog(`Игрок ввёл действие: "${actionText}"`, 'info');
+  conversationHistory.push({
+    role: "user",
+    content: `Игрок выбрал действие: ${actionText}. Текущее состояние персонажа: ${JSON.stringify(player, null, 2)}. Создай следующую сцену на основе этого выбора.`
+  });
+  updateChoiceAreaUI(true);
+  try {
+    addLog('Отправляем действие нейросети...', 'debug');
+    const response = await callOpenRouterAPI(conversationHistory);
+    if (response) {
+      addLog('Получен ответ от нейросети на действие игрока', 'success');
+      addLog(`Ответ нейросети (${response.length} символов):`, 'info');
+      addLog(response.substring(0, 500) + (response.length > 500 ? '...' : ''), 'debug');
+      let sceneData;
+      try {
+        sceneData = JSON.parse(extractJsonFromMarkdown(response));
+        addLog('JSON ответ успешно распарсен', 'success');
+      } catch (e) {
+        addLog('Ошибка парсинга JSON ответа, запрашиваем переформатирование', 'warning');
+        addLog('Сообщение пользователя: "Переформатируй ответ в правильный JSON формат сцены D&D."', 'info');
+        const reformatResponse = await callOpenRouterAPI([
+          ...conversationHistory,
+          { role: "user", content: "Переформатируй ответ в правильный JSON формат сцены D&D." }
+        ]);
+        addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
+        addLog(reformatResponse.substring(0, 500) + (reformatResponse.length > 500 ? '...' : ''), 'debug');
+        sceneData = JSON.parse(reformatResponse);
+        addLog('JSON ответ переформатирован', 'success');
+      }
+      conversationHistory.push({ role: "assistant", content: response });
+      addLog('Рендерим новую сцену...', 'debug');
+      renderScene(sceneData);
+      showApiStatus('✅ Сцена обновлена!', 'success');
+      addLog('Сцена успешно обновлена на основе действия игрока', 'success');
+      updateChoiceAreaUI();
+    }
+  } catch (error) {
+    showApiStatus(`❌ Ошибка отправки действия: ${error.message}`, 'error');
+    addLog(`Ошибка отправки действия: ${error.message}`, 'error');
+    if (typeof onError === 'function') onError();
+    updateChoiceAreaUI();
+  }
+}
+
+// Панель DM toggle
+const toggleDMBtn = document.getElementById('toggle-dm-panel');
+const dmPanel = document.getElementById('dm-panel');
+if (toggleDMBtn && dmPanel) {
+  toggleDMBtn.onclick = () => {
+    if (dmPanel.style.display === 'none') {
+      dmPanel.style.display = '';
+    } else {
+      dmPanel.style.display = 'none';
+    }
+  };
+}
+// Кнопка инициализации в DM
+const initSessionBtn = document.getElementById('init-session');
+if (initSessionBtn) {
+  const origText = initSessionBtn.textContent;
+  initSessionBtn.onclick = async () => {
+    initSessionBtn.disabled = true;
+    initSessionBtn.textContent = 'Загрузка...';
+    await initializeSession();
+    initSessionBtn.textContent = origText;
+    initSessionBtn.disabled = false;
+    const storyPrompt = document.getElementById('init-story-prompt');
+    if (storyPrompt) storyPrompt.value = '';
+  };
+}
+// Кнопка загрузки сцены
+const loadSceneBtn = document.getElementById('load-scene');
+if (loadSceneBtn) {
+  const origText = loadSceneBtn.textContent;
+  loadSceneBtn.onclick = async () => {
+    loadSceneBtn.disabled = true;
+    loadSceneBtn.textContent = 'Загрузка...';
+    await loadSceneFromAI();
+    loadSceneBtn.textContent = origText;
+    loadSceneBtn.disabled = false;
+  };
 }

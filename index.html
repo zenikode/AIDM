@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>D&D: Тайна шахты</title>
+  <title>D&D Game</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Заголовок -->
-  <h1 id="game-title">Тайна у заброшенной шахты</h1>
+  <header class="header-bar">
+    <span class="header-title" id="header-title">D&D Game</span>
+    <button id="toggle-dm-panel" class="header-btn" aria-label="Режим DM">🛠️</button>
+  </header>
 
+  <!-- История -->
   <div id="story-container">
     <div id="story-text"></div>
   </div>
@@ -19,11 +22,22 @@
   <div class="character-card-fixed">
     <div class="character-card">
       <!-- Область выбора (внутри карточки, визуально выделена) -->
-      <div class="choices-area"><div id="choices"></div></div>
-      <div class="card-content-row">
+      <div class="choices-area">
+        <textarea id="init-story-prompt" class="init-story-prompt" placeholder="Предыстория, пожелания по тематике, атмосфере, NPC..." rows="3"></textarea>
+        <button id="init-session-main" class="init-session-main-btn" style="display:none">Начать игру</button>
+        <div class="choices-suggestions" id="choices-suggestions"></div>
+        <div class="choices-input-row">
+          <div class="input-hero-name" id="input-hero-name" style="display:none">
+            <span class="player-icon">👤</span><span id="char-name-inline">Герой</span>
+          </div>
+          <input id="choice-input" type="text" placeholder="Ваше действие..." autocomplete="off">
+          <button id="choice-send-btn">Отправить</button>
+        </div>
+      </div>
+      <div class="card-content-row" id="card-content-row">
         <!-- Левая колонка: Имя и характеристики (40%) -->
         <div class="stats-column">
-          <div class="player-name-row"><span class="player-icon">👤</span><span id="char-name">Герой</span></div>
+          <!-- <div class="player-name-row"><span class="player-icon">👤</span><span id="char-name">Герой</span></div> -->
           <div class="stats-row-horizontal" id="stats-row-horizontal"></div>
         </div>
         <!-- Правая колонка: Предметы и навыки (60%) -->
@@ -46,16 +60,12 @@
   <!-- История -->
   <!-- Удалено: <div id="story-container"><div id="story-text"></div><div id="choices"></div></div> -->
 
-  <!-- 🔽 Панель DM: взаимодействие с нейросетью -->
-  <div id="dm-panel">
-    <details>
-      <summary>🤖 Режим DM: взаимодействие с нейросетью</summary>
-      
-      <!-- Настройки API -->
+  <!-- DM Overlay и модальное окно -->
+  <div class="dm-overlay" id="dm-overlay" style="display:none;">
+    <div id="dm-panel" class="dm-modal">
       <div class="api-settings">
         <h4>Настройки API</h4>
         <input type="text" id="api-key" placeholder="Введите API ключ OpenRouter" style="width: 100%; padding: 8px; margin-bottom: 10px; background: #2a2a2a; color: #e0e0e0; border: 1px solid #555; border-radius: 4px;">
-        
         <div class="model-selection">
           <label for="model-input" style="display: block; margin-bottom: 5px; color: #ccc;">Модель:</label>
           <input type="text" id="model-input" placeholder="deepseek/deepseek-chat-v3.1:free" style="width: 100%; padding: 8px; margin-bottom: 10px; background: #2a2a2a; color: #e0e0e0; border: 1px solid #555; border-radius: 4px;">
@@ -63,12 +73,9 @@
             Популярные бесплатные модели: deepseek/deepseek-chat-v3.1:free, meta-llama/llama-3.1-8b-instruct, mistralai/mistral-7b-instruct
           </div>
         </div>
-        
         <button id="init-session" style="padding: 8px 16px; background: #4a5568; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">🚀 Инициализировать сессию</button>
         <button id="load-scene" style="padding: 8px 16px; background: #00b894; color: white; border: none; border-radius: 4px; cursor: pointer;">📥 Загрузить сцену</button>
       </div>
-
-      <!-- Консоль логов -->
       <div class="console-panel" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #555;">
         <h4>Консоль логов</h4>
         <div id="console-logs" style="background: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 10px; height: 200px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.8em; color: #ccc;">
@@ -76,9 +83,8 @@
         </div>
         <button id="clear-logs" style="margin-top: 10px; padding: 5px 10px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Очистить логи</button>
       </div>
-      
       <div id="api-status" style="margin-top: 10px; padding: 10px; background: #333; border-radius: 4px; min-height: 20px;"></div>
-    </details>
+    </div>
   </div>
 
   <script src="game.js" defer></script>
