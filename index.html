@@ -11,34 +11,26 @@
   <!-- Заголовок -->
   <h1 id="game-title">Тайна у заброшенной шахты</h1>
 
+  <div id="story-container">
+    <div id="story-text"></div>
+  </div>
+
   <!-- Карточка персонажа -->
-  <div class="character-card">
-    <!-- Левая колонка: Имя и характеристики (20%) -->
-    <div class="stats-column">
-      <!-- Имя персонажа -->
-      <div class="player-name-card">👤 <span id="char-name">Герой</span></div>
-      
-      <!-- HP и MP в один ряд -->
-      <div class="hp-mp-row">
-        <div class="hp-mp-item">
-          <div class="hp-mp-icon">💖</div>
-          <div class="hp-mp-label">HP</div>
-          <div class="hp-mp-value" id="hp-value">?</div>
+  <div class="character-card-fixed">
+    <div class="character-card">
+      <!-- Область выбора (внутри карточки, визуально выделена) -->
+      <div class="choices-area"><div id="choices"></div></div>
+      <div class="card-content-row">
+        <!-- Левая колонка: Имя и характеристики (40%) -->
+        <div class="stats-column">
+          <div class="player-name-row"><span class="player-icon">👤</span><span id="char-name">Герой</span></div>
+          <div class="stats-row-horizontal" id="stats-row-horizontal"></div>
         </div>
-        <div class="hp-mp-item">
-          <div class="hp-mp-icon">🔵</div>
-          <div class="hp-mp-label">MP</div>
-          <div class="hp-mp-value" id="mp-value">?</div>
+        <!-- Правая колонка: Предметы и навыки (60%) -->
+        <div class="abilities-column">
+          <div class="abilities-panel" id="abilities"></div>
         </div>
       </div>
-      
-      <!-- Характеристики -->
-      <div class="stats-panel" id="stats-panel"></div>
-    </div>
-    
-    <!-- Правая колонка: Предметы и навыки (80%) -->
-    <div class="abilities-column">
-      <div class="abilities-panel" id="abilities"></div>
     </div>
   </div>
 
@@ -52,10 +44,7 @@
   </div>
 
   <!-- История -->
-  <div id="story-container">
-    <div id="story-text"></div>
-    <div id="choices"></div>
-  </div>
+  <!-- Удалено: <div id="story-container"><div id="story-text"></div><div id="choices"></div></div> -->
 
   <!-- 🔽 Панель DM: взаимодействие с нейросетью -->
   <div id="dm-panel">

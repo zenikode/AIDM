@@ -2,9 +2,10 @@
 let player = {};
 let currentSceneId = 'start';
 let apiKey = 'sk-or-v1-1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Захардкоженный ключ для тестирования
-let selectedModel = 'deepseek/deepseek-chat-v3.1:free'; // Модель по умолчанию
+let selectedModel = 'openai/gpt-oss-20b:free'; // Модель по умолчанию
 let sessionInitialized = false;
 let conversationHistory = [];
+let promptText = '';
 
 // === Функции для работы с localStorage ===
 function saveSettings() {
@@ -88,10 +89,25 @@ function clearLogs() {
   }
 }
 
+// === Загрузка промпта из файла ===
+async function loadPrompt() {
+  try {
+    const resp = await fetch('prompt.txt');
+    if (!resp.ok) throw new Error('Не удалось загрузить prompt.txt');
+    promptText = await resp.text();
+    addLog('Промпт успешно загружен из prompt.txt', 'success');
+  } catch (e) {
+    addLog('Ошибка загрузки prompt.txt: ' + e.message, 'error');
+    promptText = 'Ты - мастер подземелий (DM) для игры D&D...'; // fallback
+  }
+}
+
 // === Инициализация при загрузке ===
-window.onload = () => {
+window.onload = async () => {
   // Загружаем сохраненные настройки
   loadSettings();
+  // Загружаем промпт
+  await loadPrompt();
   
   // Показываем инструкцию
   const storyText = document.getElementById('story-text');
@@ -155,47 +171,7 @@ async function initializeSession() {
   addLog('Начинаем инициализацию сессии с нейросетью', 'info');
   addLog(`Используем модель: ${selectedModel}`, 'debug');
 
-  const systemPrompt = `Ты - мастер подземелий (DM) для игры D&D. Твоя задача:
-
-1. Создавать увлекательные сцены в формате JSON
-2. Отвечать на выборы игроков новыми сценами
-3. Ведение счета характеристик персонажа
-
-ФОРМАТ СЦЕНЫ (JSON):
-{
-  "title": "Название сцены",
-  "subtitle": "Подзаголовок",
-  "text": "Описание сцены с атмосферой",
-  "choices": [
-    {"id": "choice1", "text": "Описание выбора"}
-  ],
-  "player": {
-    "name": "Имя персонажа",
-    "str": 15, "dex": 12, "con": 14, "int": 10, "wis": 13, "cha": 11,
-    "hp": 20, "mp": 10
-  },
-// добавляй поле врагов в json только если враги действительно есть на сцене и происходит боевая ситуация
-"enemy": { 
-    "name": "Враг",
-    "hp": 30,
-    "ac": 13,
-    "status": []
-  },
-  "stats": {
-    "visible": true,
-    "icons": ["💪", "🤸", "🛡️", "🧠", "🦉", "🎭"],
-    "labels": ["Сила", "Ловкость", "Телосложение", "Интеллект", "Мудрость", "Харизма"]
-  },
-  "abilities": [
-    {"icon": "⚔️", "name": "Атака", "desc": "Урон: 5"},
-    {"icon": "💰", "name": "Золото", "desc": "Монеты: 100"},
-    {"icon": "🧪", "name": "Зелья", "desc": "Количество: 3"}
-  ]
-}
-
-Начни с вводной сцены для нового персонажа. 
-
-Отвечай json файлами указанной структуры без markdown-разметки. `;
+  const systemPrompt = promptText;
 
   try {
     addLog('Отправляем запрос к нейросети...', 'debug');
@@ -331,7 +307,7 @@ function showApiStatus(message, type = 'info') {
 }
 
 // Отправка выбора нейросети
-async function sendChoiceToAI(choice) {
+async function sendChoiceToAI(choice, onError) {
   showApiStatus('🔄 Отправка выбора нейросети...', 'loading');
   addLog(`Игрок выбрал: "${choice.text}" (ID: ${choice.id})`, 'info');
 
@@ -384,6 +360,7 @@ async function sendChoiceToAI(choice) {
   } catch (error) {
     showApiStatus(`❌ Ошибка отправки выбора: ${error.message}`, 'error');
     addLog(`Ошибка отправки выбора: ${error.message}`, 'error');
+    if (typeof onError === 'function') onError();
   }
 }
 
@@ -402,36 +379,49 @@ function renderScene(data) {
   document.getElementById('game-title').textContent = data.subtitle || data.title || 'Игра';
 
   // Имя персонажа
-  document.getElementById('char-name').textContent = player.name || 'Герой';
+  const charNameEl = document.getElementById('char-name');
+  if (charNameEl) charNameEl.textContent = player.name || 'Герой';
 
-  // HP и MP
-  document.getElementById('hp-value').textContent = player.hp ?? '?';
-  document.getElementById('mp-value').textContent = player.mp ?? '?';
-
-  // Характеристики (без HP и MP)
-  const statsPanel = document.getElementById('stats-panel');
-  if (statsPanel) {
-    statsPanel.innerHTML = '';
+  // Характеристики + HP/MP (горизонтальная строка)
+  const statsRowHorizontal = document.getElementById('stats-row-horizontal');
+  if (statsRowHorizontal) {
+    statsRowHorizontal.innerHTML = '';
     if (data.stats?.visible !== false) {
+      // HP
+      const hpDiv = document.createElement('div');
+      hpDiv.className = 'stat-horiz-item stat-hpmp';
+      hpDiv.innerHTML = `
+        <span class="stat-horiz-icon">💖</span>
+        <span class="stat-horiz-label">HP</span>
+        <span class="stat-horiz-hpmp-value hp">${player.hp ?? '?'}</span>
+      `;
+      statsRowHorizontal.appendChild(hpDiv);
+      // MP
+      const mpDiv = document.createElement('div');
+      mpDiv.className = 'stat-horiz-item stat-hpmp';
+      mpDiv.innerHTML = `
+        <span class="stat-horiz-icon">🔵</span>
+        <span class="stat-horiz-label">MP</span>
+        <span class="stat-horiz-hpmp-value mp">${player.mp ?? '?'}</span>
+      `;
+      statsRowHorizontal.appendChild(mpDiv);
       // Основные характеристики
       const statNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
       const icons = data.stats?.icons || ['💪', '🤸', '🛡️', '🧠', '🦉', '🎭'];
       const labels = data.stats?.labels || ['Сила', 'Ловкость', 'Телосложение', 'Интеллект', 'Мудрость', 'Харизма'];
-
       statNames.forEach((stat, i) => {
-        const value = player[stat] || 10;
-        const mod = Math.floor((value - 10) / 2);
+        const base = player[stat] || 10;
+        const mod = Math.floor((base - 10) / 2);
+        const total = base + mod;
         const sign = mod >= 0 ? '+' : '';
-        const item = document.createElement('div');
-        item.className = 'stat-item compact';
-        item.innerHTML = `
-          <div class="stat-name">${icons[i]} ${labels[i]}</div>
-          <div class="stat-value-mod">
-            <span class="stat-value">${value}</span>
-            <span class="stat-mod">${sign}${mod}</span>
-          </div>
+        const statDiv = document.createElement('div');
+        statDiv.className = 'stat-horiz-item';
+        statDiv.innerHTML = `
+          <span class="stat-horiz-icon">${icons[i]}</span>
+          <span class="stat-horiz-label">${labels[i]}</span>
+          <span class="stat-horiz-formula">(${base}${sign}${mod})<b>${total}</b></span>
         `;
-        statsPanel.appendChild(item);
+        statsRowHorizontal.appendChild(statDiv);
       });
     }
   }
@@ -479,23 +469,30 @@ function renderScene(data) {
     const choicesContainer = document.getElementById('choices');
     if (choicesContainer) {
       choicesContainer.innerHTML = '';
-
-      (data.choices || []).forEach(choice => {
+      (data.choices || []).forEach((choice, idx) => {
         const btn = document.createElement('button');
         btn.className = 'choice-btn';
         btn.textContent = choice.text;
-
+        btn.disabled = false;
         btn.onclick = () => {
           if (sessionInitialized) {
-            // Отправляем выбор нейросети
-            sendChoiceToAI(choice);
+            const allBtns = choicesContainer.querySelectorAll('button');
+            allBtns.forEach(b => {
+              b.disabled = true;
+              b.classList.remove('choice-selected');
+            });
+            btn.classList.add('choice-selected');
+            sendChoiceToAI(choice, () => {
+              allBtns.forEach(b => {
+                b.disabled = false;
+                b.classList.remove('choice-selected');
+              });
+            });
           } else {
-            // Если сессия не инициализирована, показываем ошибку
             addLog('Ошибка: сессия не инициализирована, нельзя отправить выбор', 'error');
             alert('❌ Сначала инициализируйте сессию с нейросетью!');
           }
         };
-
         choicesContainer.appendChild(btn);
       });
     }
