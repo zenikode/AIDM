@@ -435,21 +435,6 @@ function renderScene(data) {
   if (abilitiesPanel) {
     abilitiesPanel.innerHTML = '';
 
-    // Добавляем основные параметры
-    coreAbilities.forEach(ab => {
-      const div = document.createElement('div');
-      div.className = 'ability';
-      div.innerHTML = `
-        <div class="ability-header">
-          <span class="ability-icon">${ab.icon}</span>
-          <span class="ability-name">${ab.name}</span>
-          <span class="ability-cost">${ab.value}</span>
-        </div>
-        <div class="ability-desc">${ab.desc}</div>
-      `;
-      abilitiesPanel.appendChild(div);
-    });
-
     // Добавляем обычные навыки
     (data.abilities || []).forEach(ab => {
       const div = document.createElement('div');
