@@ -82,7 +82,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  width: 1000px;
+  width: 100wv;
   z-index: 100;
   background: rgba(18,18,18,0.98);
   box-shadow: 0 -4px 24px 0 rgba(0,0,0,0.45);
@@ -401,7 +401,7 @@ body {
 
 /* История */
 #story-container {
-  max-width: 900px;
+  width: 900px;
   margin: 20px auto;
   background: transparent;
   color: #e0e0e0;
