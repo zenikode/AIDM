@@ -69,12 +69,7 @@
         <div class="model-selection">
           <label for="model-input" style="display: block; margin-bottom: 5px; color: #ccc;">Модель:</label>
           <input type="text" id="model-input" placeholder="deepseek/deepseek-chat-v3.1:free" style="width: 100%; padding: 8px; margin-bottom: 10px; background: #2a2a2a; color: #e0e0e0; border: 1px solid #555; border-radius: 4px;">
-          <div class="model-hint" style="font-size: 0.8em; color: #888; margin-bottom: 10px;">
-            Популярные бесплатные модели: deepseek/deepseek-chat-v3.1:free, meta-llama/llama-3.1-8b-instruct, mistralai/mistral-7b-instruct
-          </div>
         </div>
-        <button id="init-session" style="padding: 8px 16px; background: #4a5568; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">🚀 Инициализировать сессию</button>
-        <button id="load-scene" style="padding: 8px 16px; background: #00b894; color: white; border: none; border-radius: 4px; cursor: pointer;">📥 Загрузить сцену</button>
       </div>
       <div class="console-panel" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #555;">
         <h4>Консоль логов</h4>
@@ -87,6 +82,6 @@
     </div>
   </div>
 
-  <script src="game.js" defer></script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>
