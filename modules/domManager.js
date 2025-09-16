@@ -1,0 +1,320 @@
+export class DOMManager {
+  constructor() {
+    this.player = {};
+    this.elements = this._cacheElements();
+  }
+
+  // Кэширование DOM элементов
+  _cacheElements() {
+    return {
+      // Заголовки
+      pageTitle: document.getElementById('page-title'),
+      headerTitle: document.getElementById('header-title'),
+      charNameInline: document.getElementById('char-name-inline'),
+      
+      // Статистика
+      statsRowHorizontal: document.getElementById('stats-row-horizontal'),
+      
+      // Способности
+      abilitiesPanel: document.getElementById('abilities'),
+      
+      // Бой
+      battleArea: document.getElementById('battle-area'),
+      enemyName: document.getElementById('enemy-name'),
+      enemyHp: document.getElementById('enemy-hp'),
+      statusEffects: document.getElementById('status-effects'),
+      
+      // Область выбора
+      initSessionMain: document.getElementById('init-session-main'),
+      storyPrompt: document.getElementById('init-story-prompt'),
+      suggestionsDiv: document.getElementById('choices-suggestions'),
+      choiceInput: document.getElementById('choice-input'),
+      choiceSendBtn: document.getElementById('choice-send-btn'),
+      inputHeroName: document.getElementById('input-hero-name'),
+      cardContentRow: document.getElementById('card-content-row'),
+      
+      // DM панель
+      toggleDMBtn: document.getElementById('toggle-dm-panel'),
+      dmOverlay: document.getElementById('dm-overlay'),
+      
+      // API элементы
+      apiKeyInput: document.getElementById('api-key'),
+      modelInput: document.getElementById('model-input'),
+      consoleLogs: document.getElementById('console-logs'),
+      apiStatus: document.getElementById('api-status'),
+      clearLogsBtn: document.getElementById('clear-logs')
+    };
+  }
+
+  // Обновление данных игрока
+  updatePlayerData(playerData) {
+    this.player = { ...this.player, ...playerData };
+    this._updatePlayerUI();
+  }
+
+  // Обновление UI игрока
+  _updatePlayerUI() {
+    // Имя персонажа
+    if (this.elements.charNameInline) {
+      this.elements.charNameInline.textContent = this.player.name || 'Герой';
+    }
+
+    // Характеристики
+    this._renderStats();
+  }
+
+  // Рендеринг характеристик
+  _renderStats() {
+    if (!this.elements.statsRowHorizontal) return;
+
+    this.elements.statsRowHorizontal.innerHTML = '';
+
+    // HP + MP в одной строке
+    const hpmpRow = document.createElement('div');
+    hpmpRow.className = 'hp-mp-row';
+    
+    // HP
+    const hpDiv = document.createElement('div');
+    hpDiv.className = 'stat-horiz-item stat-hpmp';
+    hpDiv.innerHTML = `
+      <span class="stat-horiz-icon">💖</span>
+      <span class="stat-horiz-label">HP</span>
+      <span class="stat-horiz-hpmp-value hp">${this.player.hp ?? '?'}</span>
+    `;
+    hpmpRow.appendChild(hpDiv);
+    
+    // MP
+    const mpDiv = document.createElement('div');
+    mpDiv.className = 'stat-horiz-item stat-hpmp';
+    mpDiv.innerHTML = `
+      <span class="stat-horiz-icon">🔵</span>
+      <span class="stat-horiz-label">MP</span>
+      <span class="stat-horiz-hpmp-value mp">${this.player.mp ?? '?'}</span>
+    `;
+    hpmpRow.appendChild(mpDiv);
+    
+    this.elements.statsRowHorizontal.appendChild(hpmpRow);
+
+    // Основные характеристики
+    const statNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    const icons = ['💪', '🤸', '🛡️', '🧠', '🦉', '🎭'];
+    const labels = ['Сила', 'Ловкость', 'Телосложение', 'Интеллект', 'Мудрость', 'Харизма'];
+    
+    statNames.forEach((stat, i) => {
+      const base = this.player[stat] || 10;
+      const mod = Math.floor((base - 10) / 2);
+      const total = base + mod;
+      const sign = mod >= 0 ? '+' : '';
+      
+      const statDiv = document.createElement('div');
+      statDiv.className = 'stat-horiz-item';
+      statDiv.innerHTML = `
+        <span class="stat-horiz-icon">${icons[i]}</span>
+        <span class="stat-horiz-label">${labels[i]}</span>
+        <span class="stat-horiz-formula">(${base}${sign}${mod})<b>${total}</b></span>
+      `;
+      this.elements.statsRowHorizontal.appendChild(statDiv);
+    });
+  }
+
+  // Рендеринг способностей
+  renderAbilities(abilities = []) {
+    if (!this.elements.abilitiesPanel) return;
+
+    this.elements.abilitiesPanel.innerHTML = '';
+
+    abilities.forEach(ab => {
+      const div = document.createElement('div');
+      div.className = 'ability';
+      div.innerHTML = `
+        <div class="ability-header">
+          <span class="ability-icon">${ab.icon}</span>
+          <span class="ability-name">${ab.name}</span>
+          ${ab.cost ? `<span class="ability-cost">${ab.cost}</span>` : ''}
+        </div>
+        <div class="ability-desc">${ab.desc}</div>
+        ${ab.usage ? `<div class="ability-usage">${ab.usage}</div>` : ''}
+      `;
+      
+      if (ab.usage) {
+        div.style.cursor = 'pointer';
+        div.title = 'Вставить пример использования';
+        div.onclick = () => {
+          if (this.elements.choiceInput) {
+            if (this.elements.choiceInput.value && !this.elements.choiceInput.value.endsWith(' ')) {
+              this.elements.choiceInput.value += ' ';
+            }
+            this.elements.choiceInput.value += ab.usage;
+            this.elements.choiceInput.focus();
+          }
+        };
+      }
+      
+      this.elements.abilitiesPanel.appendChild(div);
+    });
+  }
+
+  // Рендеринг врага
+  renderEnemy(enemyData) {
+    if (!this.elements.battleArea) return;
+
+    if (enemyData) {
+      this.elements.battleArea.style.display = 'block';
+      if (this.elements.enemyName) this.elements.enemyName.textContent = enemyData.name;
+      if (this.elements.enemyHp) this.elements.enemyHp.textContent = enemyData.hp;
+      if (this.elements.statusEffects) {
+        this.elements.statusEffects.textContent = 
+          enemyData.status?.includes('weakened') ? '⚠️ Ослаблен' : '';
+      }
+    } else {
+      this.elements.battleArea.style.display = 'none';
+    }
+  }
+
+  // Обновление заголовков
+  updateTitles(titleData = {}) {
+    document.title = titleData.title || 'D&D Игра';
+    
+    if (this.elements.pageTitle) {
+      this.elements.pageTitle.textContent = titleData.title || '';
+    }
+    
+    if (this.elements.headerTitle) {
+      this.elements.headerTitle.textContent = titleData.subtitle || titleData.title || 'Игра';
+    }
+  }
+
+  // Обновление области выбора
+  updateChoiceArea(isLoading = false) {
+    if (!window.sessionInitialized) {
+      this._showInitUI(isLoading);
+    } else {
+      this._showGameUI(isLoading);
+    }
+  }
+
+  // Показать UI инициализации
+  _showInitUI(isLoading) {
+    if (this.elements.initSessionMain) {
+      this.elements.initSessionMain.style.display = 'block';
+      this.elements.initSessionMain.disabled = !!isLoading;
+      this.elements.initSessionMain.textContent = isLoading ? 'Загрузка...' : 'Начать игру';
+    }
+    
+    if (this.elements.storyPrompt) {
+      this.elements.storyPrompt.style.display = '';
+      this.elements.storyPrompt.disabled = !!isLoading;
+    }
+    
+    this._hideGameElements();
+  }
+
+  // Показать UI игры
+  _showGameUI(isLoading) {
+    if (this.elements.initSessionMain) this.elements.initSessionMain.style.display = 'none';
+    
+    if (this.elements.storyPrompt) {
+      this.elements.storyPrompt.style.display = 'none';
+      this.elements.storyPrompt.disabled = false;
+    }
+    
+    this._showGameElements(isLoading);
+  }
+
+  // Скрыть игровые элементы
+  _hideGameElements() {
+    if (this.elements.suggestionsDiv) this.elements.suggestionsDiv.style.display = 'none';
+    if (this.elements.choiceInput) this.elements.choiceInput.style.display = 'none';
+    if (this.elements.choiceSendBtn) this.elements.choiceSendBtn.style.display = 'none';
+    if (this.elements.inputHeroName) this.elements.inputHeroName.style.display = 'none';
+    if (this.elements.cardContentRow) this.elements.cardContentRow.classList.add('hidden');
+  }
+
+  // Показать игровые элементы
+  _showGameElements(isLoading) {
+    if (this.elements.suggestionsDiv) this.elements.suggestionsDiv.style.display = '';
+    if (this.elements.choiceInput) {
+      this.elements.choiceInput.style.display = '';
+      this.elements.choiceInput.disabled = !!isLoading;
+    }
+    if (this.elements.choiceSendBtn) {
+      this.elements.choiceSendBtn.style.display = '';
+      this.elements.choiceSendBtn.disabled = !!isLoading;
+      this.elements.choiceSendBtn.textContent = isLoading ? 'Отправка...' : 'Отправить';
+    }
+    if (this.elements.inputHeroName) this.elements.inputHeroName.style.display = '';
+    if (this.elements.cardContentRow) this.elements.cardContentRow.classList.remove('hidden');
+  }
+
+  // Рендеринг предложений выбора
+  renderChoices(choices = []) {
+    if (!this.elements.suggestionsDiv) return;
+
+    this.elements.suggestionsDiv.innerHTML = '';
+    
+    choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'suggestion-btn';
+      btn.textContent = choice.text;
+      btn.onclick = () => {
+        if (this.elements.choiceInput) {
+          this.elements.choiceInput.value = choice.text;
+          this.elements.choiceInput.focus();
+        }
+      };
+      this.elements.suggestionsDiv.appendChild(btn);
+    });
+
+    if (this.elements.choiceInput) {
+      this.elements.choiceInput.value = '';
+      this.elements.choiceInput.disabled = false;
+    }
+    
+    if (this.elements.choiceSendBtn) {
+      this.elements.choiceSendBtn.disabled = false;
+      this.elements.choiceSendBtn.textContent = 'Отправить';
+    }
+  }
+
+  // Очистка предложений выбора
+  clearChoices() {
+    if (this.elements.suggestionsDiv) {
+      this.elements.suggestionsDiv.innerHTML = '';
+    }
+  }
+
+  // Получение значения ввода
+  getInputValue() {
+    return this.elements.choiceInput ? this.elements.choiceInput.value.trim() : '';
+  }
+
+  // Очистка ввода
+  clearInput() {
+    if (this.elements.choiceInput) {
+      this.elements.choiceInput.value = '';
+    }
+  }
+
+  // Установка обработчиков событий
+  setChoiceHandlers(onSendAction, onInputKeyDown) {
+    if (this.elements.choiceSendBtn && this.elements.choiceInput) {
+      this.elements.choiceSendBtn.onclick = onSendAction;
+      this.elements.choiceInput.onkeydown = onInputKeyDown;
+    }
+  }
+
+  // Установка обработчиков DM панели
+  setDMPanelHandlers() {
+    if (this.elements.toggleDMBtn && this.elements.dmOverlay) {
+      this.elements.toggleDMBtn.onclick = () => {
+        this.elements.dmOverlay.style.display = 'flex';
+      };
+      
+      this.elements.dmOverlay.onclick = (e) => {
+        if (e.target === this.elements.dmOverlay) {
+          this.elements.dmOverlay.style.display = 'none';
+        }
+      };
+    }
+  }
+}
