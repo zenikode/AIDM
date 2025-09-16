@@ -1,7 +1,7 @@
 import { addLog, showApiStatus } from './logger.js';
 import { apiKey, selectedModel, saveSetting, loadSetting } from './storage.js';
-import { typeWriter } from './ui.js';
 import { extractJsonFromMarkdown, loadFile } from './utils.js';
+import { showStoryText, setStoryText } from './story.js';
 
 // === Глобальные переменные ===
 let player = {};
@@ -12,10 +12,7 @@ let conversationHistory = [];
 window.onload = async () => {
   
   // Показываем инструкцию
-  const storyText = document.getElementById('story-text');
-  if (storyText) {
-    storyText.textContent = 'Ожидание инициализации сессии с нейросетью.\n\nВведите API ключ и нажмите "Инициализировать сессию".';
-  }
+  setStoryText('Ожидание инициализации сессии с нейросетью.\n\nВведите API ключ и нажмите "Инициализировать сессию".');
 
   updateChoiceAreaUI();
   // Установить дефолтное пожелание, если поле пустое
@@ -30,9 +27,7 @@ window.onload = async () => {
     storyPrompt.addEventListener('input', saveSetting);
   }
   // Дружелюбный стартовый текст
-  if (storyText) {
-    storyText.textContent = 'Добро пожаловать в D&D Game!\n\nПридумайте пожелания к сеттингу и нажмите "Начать игру".';
-  }
+  setStoryText('Добро пожаловать в D&D Game!\n\nПридумайте пожелания к сеттингу и нажмите "Начать игру".');
   // Кнопка инициализации (главная)
   const initSessionMain = document.getElementById('init-session-main');
   if (initSessionMain) {
@@ -322,9 +317,7 @@ function renderScene(data) {
   }
 
   // Текст
-  const storyTextEl = document.getElementById('story-text');
-  if (storyTextEl) storyTextEl.textContent = '';
-  typeWriter(data.text || 'Нет данных.', storyTextEl, () => {
+  showStoryText(data.text || 'Нет данных.', () => {
     // Область выбора с автоподстановкой
     const suggestionsDiv = document.getElementById('choices-suggestions');
     const input = document.getElementById('choice-input');
@@ -333,35 +326,35 @@ function renderScene(data) {
       suggestionsDiv.innerHTML = '';
       (data.choices || []).forEach(choice => {
         const btn = document.createElement('button');
-          btn.className = 'suggestion-btn';
+        btn.className = 'suggestion-btn';
         btn.textContent = choice.text;
         btn.onclick = () => {
-            input.value = choice.text;
-            input.focus();
-          };
-          suggestionsDiv.appendChild(btn);
-        });
-        input.value = '';
-        input.disabled = false;
-        sendBtn.disabled = false;
-        sendBtn.textContent = 'Отправить';
-        // Отправка действия
-        function sendAction() {
-          const actionText = input.value.trim();
-          if (!actionText) return;
-          suggestionsDiv.innerHTML = '';
-          updateChoiceAreaUI(true);
-          sendTextActionToAI(actionText, () => {
-            updateChoiceAreaUI();
-          });
-        }
-        sendBtn.onclick = sendAction;
-        input.onkeydown = e => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            sendAction();
-          }
+          input.value = choice.text;
+          input.focus();
         };
+        suggestionsDiv.appendChild(btn);
+      });
+      input.value = '';
+      input.disabled = false;
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Отправить';
+      // Отправка действия
+      function sendAction() {
+        const actionText = input.value.trim();
+        if (!actionText) return;
+        suggestionsDiv.innerHTML = '';
+        updateChoiceAreaUI(true);
+        sendTextActionToAI(actionText, () => {
+          updateChoiceAreaUI();
+        });
+      }
+      sendBtn.onclick = sendAction;
+      input.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sendAction();
+        }
+      };
     }
   });
 }
@@ -461,4 +454,19 @@ function updateChoiceAreaUI(isLoading = false) {
     if (inputHeroName) inputHeroName.style.display = '';
     if (cardContentRow) cardContentRow.classList.remove('hidden');
   }
+}
+
+
+// Панель DM overlay toggle
+const toggleDMBtn = document.getElementById('toggle-dm-panel');
+const dmOverlay = document.getElementById('dm-overlay');
+if (toggleDMBtn && dmOverlay) {
+  toggleDMBtn.onclick = () => {
+      dmOverlay.style.display = 'flex';
+  };
+  dmOverlay.onclick = (e) => {
+      if (e.target === dmOverlay) {
+      dmOverlay.style.display = 'none';
+      }
+  };
 }

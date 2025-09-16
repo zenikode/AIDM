@@ -1,5 +1,4 @@
 // Вспомогательные функции
-
 export function extractJsonFromMarkdown(markdown) {
   try {
     const parsed = JSON.parse(markdown.trim());
