@@ -4,11 +4,12 @@ import { extractJsonFromMarkdown, loadFile } from './utils.js';
 import { showStoryText, setStoryText } from './story.js';
 import { DOMManager } from './modules/domManager.js';
 import { Player } from './modules/Player.js';
-import { callOpenRouterAPI, initializeSessionWithAI, continueConversationWithAI, reformatResponseToJSON } from './api.js';
+import { SceneMediator } from './modules/SceneMediator.js';
 
 // === Глобальные переменные ===
 let player = new Player();
 let domManager = new DOMManager();
+let sceneMediator = new SceneMediator();
 let sessionInitialized = false;
 let conversationHistory = [];
 
@@ -73,24 +74,17 @@ async function initializeSession() {
   }
 
   try {
-    addLog('Отправляем запрос к нейросети...', 'debug');
+    addLog('Отправляем запрос к нейросети через медиатор...', 'debug');
     addLog('Сообщение пользователя: ' + JSON.stringify(userPrompt), 'info');
 
-    const response = await initializeSessionWithAI(systemPrompt, userPrompt);
+    const initialized = await sceneMediator.initializeSession(systemPrompt, userPrompt);
 
-    if (response) {
-      addLog('Получен ответ от нейросети', 'success');
-      addLog(`Ответ нейросети (${response.length} символов):`, 'info');
-      addLog(response, 'debug');
-
+    if (initialized) {
+      addLog('Медиатор успешно инициализировал сессию', 'success');
+      
       sessionInitialized = true;
       window.sessionInitialized = true;
       domManager.updateChoiceArea();
-        conversationHistory = [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        { role: "assistant", content: response }
-        ];
       
       showApiStatus(`✅ Сессия инициализирована с моделью ${selectedModel}! Нажмите \"Загрузить сцену\"`, 'success');
       addLog('Сессия успешно инициализирована', 'success');
@@ -117,38 +111,16 @@ async function loadSceneFromAI() {
   }
 
   showApiStatus('🔄 Загрузка сцены от нейросети...', 'loading');
-  addLog('Загружаем сцену от нейросети...', 'info');
+  addLog('Загружаем сцену от нейросети через медиатор...', 'info');
 
   domManager.updateChoiceArea(true);
   try {
-    addLog('Отправляем запрос к нейросети...', 'debug');
-    addLog('Сообщение пользователя: \"Загрузи сцену\"', 'info');
+    addLog('Отправляем запрос к нейросети через медиатор...', 'debug');
     
-    const response = await continueConversationWithAI(conversationHistory);
+    const sceneData = await sceneMediator.loadScene();
     
-    if (response) {
-      addLog('Получен ответ от нейросети', 'success');
-      addLog(`Ответ нейросети (${response.length} символов):`, 'info');
-      addLog(response, 'debug');
-      
-      // Парсим JSON ответ
-      let sceneData;
-      try {
-        sceneData = JSON.parse(extractJsonFromMarkdown (response));
-        addLog('JSON успешно распарсен', 'success');
-    } catch (e) {
-        addLog('Ошибка парсинга JSON, запрашиваем переформатирование', 'warning');
-        addLog('Сообщение пользователя: \"Переформатируй ответ в правильный JSON формат сцены D&D.\"', 'info');
-        // Если не JSON, просим переформатировать
-        const reformatResponse = await reformatResponseToJSON(conversationHistory);
-        addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
-  addLog(reformatResponse, 'debug');
-        sceneData = JSON.parse(reformatResponse);
-        addLog('JSON переформатирован', 'success');
-      }
-
-      // Добавляем ответ в историю
-      conversationHistory.push({ role: "assistant", content: response });
+    if (sceneData) {
+      addLog('Медиатор успешно загрузил сцену', 'success');
       
       // Рендерим сцену
       addLog('Рендерим сцену...', 'debug');
@@ -215,32 +187,15 @@ function renderScene(data) {
 async function sendTextActionToAI(actionText, onError) {
   showApiStatus('🔄 Отправка действия нейросети...', 'loading');
   addLog(`Игрок ввёл действие: \"${actionText}\"`, 'info');
-  conversationHistory.push({
-    role: "user",
-    content: `Игрок выбрал действие: ${actionText}. Текущее состояние персонажа: ${JSON.stringify(player.toJSON(), null, 2)}. Создай следующую сцену на основе этого выбора.`
-  });
+  
   domManager.updateChoiceArea(true);
   try {
-    addLog('Отправляем действие нейросети...', 'debug');
-    const response = await continueConversationWithAI(conversationHistory);
-    if (response) {
-      addLog('Получен ответ от нейросети на действие игрока', 'success');
-      addLog(`Ответ нейросети (${response.length} символов):`, 'info');
-      addLog(response, 'debug');
-      let sceneData;
-      try {
-        sceneData = JSON.parse(extractJsonFromMarkdown(response));
-        addLog('JSON ответ успешно распарсен', 'success');
-      } catch (e) {
-        addLog('Ошибка парсинга JSON ответа, запрашиваем переформатирование', 'warning');
-        addLog('Сообщение пользователя: \"Переформатируй ответ в правильный JSON формат сцены D&D.\"', 'info');
-        const reformatResponse = await reformatResponseToJSON(conversationHistory);
-        addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
-  addLog(reformatResponse, 'debug');
-        sceneData = JSON.parse(reformatResponse);
-        addLog('JSON ответ переформатирован', 'success');
-      }
-      conversationHistory.push({ role: "assistant", content: response });
+    addLog('Отправляем действие нейросети через медиатор...', 'debug');
+    const sceneData = await sceneMediator.sendPlayerAction(actionText, player.toJSON());
+    
+    if (sceneData) {
+      addLog('Медиатор успешно обработал действие игрока', 'success');
+      
       addLog('Рендерим новую сцену...', 'debug');
       renderScene(sceneData);
       showApiStatus('✅ Сцена обновлена!', 'success');
