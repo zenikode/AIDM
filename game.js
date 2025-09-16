@@ -301,7 +301,7 @@ async function initializeSession() {
   try {
     addLog('Отправляем запрос к нейросети...', 'debug');
     addLog('Сообщение пользователя: ' + JSON.stringify(userPrompt), 'info');
-    
+
     const response = await callOpenRouterAPI([
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
@@ -311,15 +311,15 @@ async function initializeSession() {
       addLog('Получен ответ от нейросети', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
       addLog(response, 'debug');
-      
+
       sessionInitialized = true;
       window.sessionInitialized = true;
       updateChoiceAreaUI();
-      conversationHistory = [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        conversationHistory = [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         { role: "assistant", content: response }
-      ];
+        ];
       
       showApiStatus(`✅ Сессия инициализирована с моделью ${selectedModel}! Нажмите "Загрузить сцену"`, 'success');
       addLog('Сессия успешно инициализирована', 'success');
@@ -374,7 +374,7 @@ async function loadSceneFromAI() {
           { role: "user", content: "Переформатируй ответ в правильный JSON формат сцены D&D." }
         ]);
         addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
-        addLog(reformatResponse.substring(0, 500) + (reformatResponse.length > 500 ? '...' : ''), 'debug');
+  addLog(reformatResponse, 'debug');
         sceneData = JSON.parse(reformatResponse);
         addLog('JSON переформатирован', 'success');
       }
@@ -476,7 +476,7 @@ async function sendChoiceToAI(choice, onError) {
           { role: "user", content: "Переформатируй ответ в правильный JSON формат сцены D&D." }
         ]);
         addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
-        addLog(reformatResponse.substring(0, 500) + (reformatResponse.length > 500 ? '...' : ''), 'debug');
+  addLog(reformatResponse, 'debug');
         sceneData = JSON.parse(reformatResponse);
         addLog('JSON ответ переформатирован', 'success');
       }
@@ -703,7 +703,7 @@ async function sendTextActionToAI(actionText, onError) {
           { role: "user", content: "Переформатируй ответ в правильный JSON формат сцены D&D." }
         ]);
         addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
-        addLog(reformatResponse.substring(0, 500) + (reformatResponse.length > 500 ? '...' : ''), 'debug');
+  addLog(reformatResponse, 'debug');
         sceneData = JSON.parse(reformatResponse);
         addLog('JSON ответ переформатирован', 'success');
       }
