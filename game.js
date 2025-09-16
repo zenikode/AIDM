@@ -4,6 +4,7 @@ import { extractJsonFromMarkdown, loadFile } from './utils.js';
 import { showStoryText, setStoryText } from './story.js';
 import { DOMManager } from './modules/domManager.js';
 import { Player } from './modules/Player.js';
+import { callOpenRouterAPI, initializeSessionWithAI, continueConversationWithAI, reformatResponseToJSON } from './api.js';
 
 // === Глобальные переменные ===
 let player = new Player();
@@ -75,10 +76,7 @@ async function initializeSession() {
     addLog('Отправляем запрос к нейросети...', 'debug');
     addLog('Сообщение пользователя: ' + JSON.stringify(userPrompt), 'info');
 
-    const response = await callOpenRouterAPI([
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ]);
+    const response = await initializeSessionWithAI(systemPrompt, userPrompt);
 
     if (response) {
       addLog('Получен ответ от нейросети', 'success');
@@ -94,7 +92,7 @@ async function initializeSession() {
         { role: "assistant", content: response }
         ];
       
-      showApiStatus(`✅ Сессия инициализирована с моделью ${selectedModel}! Нажмите "Загрузить сцену"`, 'success');
+      showApiStatus(`✅ Сессия инициализирована с моделью ${selectedModel}! Нажмите \"Загрузить сцену\"`, 'success');
       addLog('Сессия успешно инициализирована', 'success');
       
       // Автоматически загружаем первую сцену
@@ -124,9 +122,9 @@ async function loadSceneFromAI() {
   domManager.updateChoiceArea(true);
   try {
     addLog('Отправляем запрос к нейросети...', 'debug');
-    addLog('Сообщение пользователя: "Загрузи сцену"', 'info');
+    addLog('Сообщение пользователя: \"Загрузи сцену\"', 'info');
     
-    const response = await callOpenRouterAPI(conversationHistory);
+    const response = await continueConversationWithAI(conversationHistory);
     
     if (response) {
       addLog('Получен ответ от нейросети', 'success');
@@ -140,12 +138,9 @@ async function loadSceneFromAI() {
         addLog('JSON успешно распарсен', 'success');
     } catch (e) {
         addLog('Ошибка парсинга JSON, запрашиваем переформатирование', 'warning');
-        addLog('Сообщение пользователя: "Переформатируй ответ в правильный JSON формат сцены D&D."', 'info');
+        addLog('Сообщение пользователя: \"Переформатируй ответ в правильный JSON формат сцены D&D.\"', 'info');
         // Если не JSON, просим переформатировать
-        const reformatResponse = await callOpenRouterAPI([
-          ...conversationHistory,
-          { role: "user", content: "Переформатируй ответ в правильный JSON формат сцены D&D." }
-        ]);
+        const reformatResponse = await reformatResponseToJSON(conversationHistory);
         addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
   addLog(reformatResponse, 'debug');
         sceneData = JSON.parse(reformatResponse);
@@ -167,39 +162,6 @@ async function loadSceneFromAI() {
     addLog(`Ошибка загрузки сцены: ${error.message}`, 'error');
     domManager.updateChoiceArea();
   }
-}
-
-// Вызов OpenRouter API
-async function callOpenRouterAPI(messages) {
-  addLog(`Отправляем запрос к OpenRouter API (модель: ${selectedModel})`, 'debug');
-  
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': window.location.origin,
-      'X-Title': 'D&D Game Interface'
-    },
-    body: JSON.stringify({
-      model: selectedModel,
-      messages: messages,
-      temperature: 0.8,
-      max_tokens: 2000
-    })
-  });
-
-  addLog(`Получен ответ: HTTP ${response.status}`, 'debug');
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    addLog(`Ошибка API: ${response.status} - ${errorText}`, 'error');
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  addLog('Ответ успешно получен и обработан', 'success');
-  return data.choices[0].message.content;
 }
 
 // === Отрисовка сцены ===
@@ -252,7 +214,7 @@ function renderScene(data) {
 // Новая функция отправки действия
 async function sendTextActionToAI(actionText, onError) {
   showApiStatus('🔄 Отправка действия нейросети...', 'loading');
-  addLog(`Игрок ввёл действие: "${actionText}"`, 'info');
+  addLog(`Игрок ввёл действие: \"${actionText}\"`, 'info');
   conversationHistory.push({
     role: "user",
     content: `Игрок выбрал действие: ${actionText}. Текущее состояние персонажа: ${JSON.stringify(player.toJSON(), null, 2)}. Создай следующую сцену на основе этого выбора.`
@@ -260,7 +222,7 @@ async function sendTextActionToAI(actionText, onError) {
   domManager.updateChoiceArea(true);
   try {
     addLog('Отправляем действие нейросети...', 'debug');
-    const response = await callOpenRouterAPI(conversationHistory);
+    const response = await continueConversationWithAI(conversationHistory);
     if (response) {
       addLog('Получен ответ от нейросети на действие игрока', 'success');
       addLog(`Ответ нейросети (${response.length} символов):`, 'info');
@@ -271,11 +233,8 @@ async function sendTextActionToAI(actionText, onError) {
         addLog('JSON ответ успешно распарсен', 'success');
       } catch (e) {
         addLog('Ошибка парсинга JSON ответа, запрашиваем переформатирование', 'warning');
-        addLog('Сообщение пользователя: "Переформатируй ответ в правильный JSON формат сцены D&D."', 'info');
-        const reformatResponse = await callOpenRouterAPI([
-          ...conversationHistory,
-          { role: "user", content: "Переформатируй ответ в правильный JSON формат сцены D&D." }
-        ]);
+        addLog('Сообщение пользователя: \"Переформатируй ответ в правильный JSON формат сцены D&D.\"', 'info');
+        const reformatResponse = await reformatResponseToJSON(conversationHistory);
         addLog(`Ответ нейросети (переформатирование, ${reformatResponse.length} символов):`, 'info');
   addLog(reformatResponse, 'debug');
         sceneData = JSON.parse(reformatResponse);
