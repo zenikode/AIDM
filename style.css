@@ -38,7 +38,6 @@
   letter-spacing: 1px;
 }
 body {
-  min-height: 100vh;
   padding-top: 56px;
   padding-bottom: 340px !important;
   background: #121212 !important;
@@ -201,7 +200,7 @@ body {
   width: 30%;
   background: #1e1e1e;
   border-right: 2px solid #444;
-  padding: 15px 10px 10px 10px
+  padding: 15px 10px 10px 10px;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -848,5 +847,162 @@ body {
   .input-hero-name {
     font-size: 0.98em;
     margin-right: 4px;
+  }
+}
+
+/* Chat History */
+.chat-history {
+  overflow-y: auto;
+  margin: 20px auto;
+  padding-bottom: 512px;
+  max-width: 900px;
+}
+
+.message {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  border-radius: 12px;
+  max-width: 80%;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.message-ai {
+  color: #e0e0e0;
+  margin: 16px;
+  margin-right: 64px;
+  padding: 16px;
+  background: #0f0f0f;
+  border-radius: 8px;
+  border: 1px solid #333;
+  text-align: left;
+}
+
+.message-player {
+  color: white;
+  margin: 16px;
+  margin-left: 64px;
+  padding: 16px;
+  background: #333333;
+  border-radius: 8px;
+  border: 1px solid #333;
+  text-align: left;
+}
+
+.message-title {
+  font-weight: bold;
+  color: #fbbf24;
+  margin-bottom: 5px;
+  font-size: 1.1em;
+}
+
+.message-subtitle {
+  color: #a8d5ff;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.message-text {
+  font-size: 1.1em;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-history::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-history::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 3px;
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.chat-history::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Welcome Screen */
+.welcome-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(18, 18, 18, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: opacity 0.5s ease-out;
+}
+
+.welcome-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.welcome-content {
+  text-align: center;
+  color: #e0e0e0;
+  padding: 40px;
+  background: rgba(35, 39, 46, 0.8);
+  border-radius: 12px;
+  border: 1px solid #555;
+  max-width: 600px;
+}
+
+.welcome-content h1 {
+  color: #fbbf24;
+  font-size: 2.5em;
+  margin-bottom: 20px;
+}
+
+.welcome-content p {
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+/* Enemy Overlay */
+.enemy-overlay {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  width: 90%;
+  max-width: 400px;
+  pointer-events: none; /* Allow clicks through if needed */
+}
+
+.battle-area {
+  background: rgba(37, 37, 37, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid #555;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  pointer-events: auto; /* Enable interactions on content */
+  margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+  .enemy-overlay {
+    top: 60px;
+    width: 95%;
+  }
+  
+  .battle-area {
+    padding: 12px;
   }
 }

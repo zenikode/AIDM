@@ -11,6 +11,7 @@ let domManager = new DOMManager();
 let sceneMediator = new SceneMediator();
 let sessionInitialized = false;
 let conversationHistory = [];
+let chatHistoryCleared = false; // <--- Новая переменная для отслеживания очистки истории чата
 
 // === Инициализация при загрузке ===
 window.onload = async () => {
@@ -20,8 +21,8 @@ window.onload = async () => {
   // Установка обработчиков DM панели
   domManager.setDMPanelHandlers();
 
-  // Дружелюбный стартовый текст
-  domManager.setStoryText('Добро пожаловать в D&D Game!\n\nПридумайте пожелания к сеттингу и нажмите "Начать игру".');
+  // Дружелюбный стартовый текст - replaced with welcome screen
+  domManager.showWelcome();
 
   // Установить дефолтное пожелание, если поле пустое
   const storyPrompt = document.getElementById('init-story-prompt');
@@ -79,13 +80,22 @@ async function initializeSession() {
       
       sessionInitialized = true;
       window.sessionInitialized = true;
+      
+      if (!chatHistoryCleared) {
+        domManager.clearChatHistory();
+        chatHistoryCleared = true;
+      }
+      
       domManager.updateChoiceArea();
       
       showApiStatus(`✅ Сессия инициализирована с моделью ${selectedModel}!`, 'success');
       addLog('Сессия успешно инициализирована и первая сцена готова', 'success');
       
-      // Отрисовка начальной сцены
+      // Append initial AI scene with animation and choices after
       renderScene(sceneData);
+      
+      // Hide welcome after first message
+      domManager.hideWelcome();
     } else {
       showApiStatus('❌ Не удалось инициализировать сессию', 'error');
       addLog('Медиатор не вернул сцену', 'error');
@@ -104,6 +114,12 @@ async function sendTextActionToAI(actionText, onError) {
   addLog(`Игрок ввёл действие: "${actionText}"`, 'info');
   
   domManager.updateChoiceArea(true);
+  
+  // Append player action to history
+  domManager.appendPlayerMessage(actionText);
+  
+  domManager.clearInput(); // Clear input after sending
+  
   try {
     addLog('Отправляем действие нейросети через медиатор...', 'debug');
     const sceneData = await sceneMediator.sendPlayerAction(actionText, player.toJSON());
@@ -161,20 +177,8 @@ function renderScene(data) {
     domManager.updatePlayerData(data.player);
   }
 
-  // Заголовки
-  domManager.updateTitles({
-    title: data.title,
-    subtitle: data.subtitle
-  });
-
-  // Способности
-  domManager.renderAbilities(data.abilities || []);
-
-  // Враг
-  domManager.renderEnemy(data.enemy);
-
-  // Текст
-  domManager.showStoryText(data.text || 'Нет данных.', () => {
+  // Append AI scene with animation, callback renders choices
+  domManager.appendAIMessage(data, () => {
     // Область выбора с автоподстановкой
     if (window.sessionInitialized) {
       domManager.renderChoices(data.choices || []);
@@ -198,4 +202,18 @@ function renderScene(data) {
       });
     }
   });
+
+  // Заголовки (update for current, but since no current, perhaps set header)
+  domManager.updateTitles({
+    title: data.title,
+    subtitle: data.subtitle
+  });
+
+  // Способности
+  domManager.renderAbilities(data.abilities || []);
+
+  // Враг
+  domManager.renderEnemy(data.enemy);
 }
+
+// Optional: Clear history on new session if desired, but keep persistent by default

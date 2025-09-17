@@ -13,9 +13,18 @@
     <button id="toggle-dm-panel" class="header-btn" aria-label="Режим DM">🛠️</button>
   </header>
 
+  <!-- Приветственный экран -->
+  <div id="welcome-screen" class="welcome-screen">
+    <div class="welcome-content">
+      <h1>D&D Game</h1>
+      <p>Добро пожаловать в D&D Game!</p>
+      <p>Придумайте пожелания к сеттингу и нажмите "Начать игру".</p>
+    </div>
+  </div>
+
   <!-- История -->
   <div id="story-container">
-    <div id="story-text"></div>
+    <div id="chat-history" class="chat-history"></div>
   </div>
 
   <!-- Карточка персонажа -->
@@ -49,11 +58,13 @@
   </div>
 
   <!-- Бой -->
-  <div class="battle-area" id="battle-area" style="display:none">
-    <div class="enemy-box">
-      <div class="enemy-name" id="enemy-name"></div>
-      <div class="enemy-hp">HP: <span id="enemy-hp"></span></div>
-      <div class="status-effects" id="status-effects"></div>
+  <div class="enemy-overlay" id="enemy-overlay" style="display:none">
+    <div class="battle-area" id="battle-area">
+      <div class="enemy-box">
+        <div class="enemy-name" id="enemy-name"></div>
+        <div class="enemy-hp">HP: <span id="enemy-hp"></span></div>
+        <div class="status-effects" id="status-effects"></div>
+      </div>
     </div>
   </div>
 

@@ -23,6 +23,7 @@ export class DOMManager {
       enemyName: document.getElementById('enemy-name'),
       enemyHp: document.getElementById('enemy-hp'),
       statusEffects: document.getElementById('status-effects'),
+      enemyOverlay: document.getElementById('enemy-overlay'),
       
       // Область выбора
       initSessionMain: document.getElementById('init-session-main'),
@@ -42,7 +43,13 @@ export class DOMManager {
       modelInput: document.getElementById('model-input'),
       consoleLogs: document.getElementById('console-logs'),
       apiStatus: document.getElementById('api-status'),
-      clearLogsBtn: document.getElementById('clear-logs')
+      clearLogsBtn: document.getElementById('clear-logs'),
+      
+      // История чата
+      chatHistory: document.getElementById('chat-history'),
+      
+      // Приветственный экран
+      welcomeScreen: document.getElementById('welcome-screen')
     };
   }
 
@@ -156,18 +163,18 @@ export class DOMManager {
 
   // Рендеринг врага
   renderEnemy(enemyData) {
-    if (!this.elements.battleArea) return;
+    if (!this.elements.enemyOverlay) return;
 
     if (enemyData) {
-      this.elements.battleArea.style.display = 'block';
+      this.elements.enemyOverlay.style.display = 'block';
       if (this.elements.enemyName) this.elements.enemyName.textContent = enemyData.name;
       if (this.elements.enemyHp) this.elements.enemyHp.textContent = enemyData.hp;
       if (this.elements.statusEffects) {
-        this.elements.statusEffects.textContent = 
-          enemyData.status?.includes('weakened') ? '⚠️ Ослаблен' : '';
+        this.elements.statusEffects.innerHTML = 
+          enemyData.status?.map(status => `<span class="status-tag">${status}</span>`).join(' ') || '';
       }
     } else {
-      this.elements.battleArea.style.display = 'none';
+      this.elements.enemyOverlay.style.display = 'none';
     }
   }
 
@@ -182,19 +189,6 @@ export class DOMManager {
     if (this.elements.headerTitle) {
       this.elements.headerTitle.textContent = titleData.subtitle || titleData.title || 'Игра';
     }
-  }
-
-  // Показать текст истории с анимацией
-  showStoryText(text, callback) {
-    const storyTextEl = document.getElementById('story-text');
-    if (!storyTextEl) return;
-    typeWriter(text, storyTextEl, callback);
-  }
-
-  // Просто установить текст истории (без анимации)
-  setStoryText(text) {
-    const storyTextEl = document.getElementById('story-text');
-    if (storyTextEl) storyTextEl.textContent = text;
   }
 
   // Обновление области выбора
@@ -328,6 +322,81 @@ export class DOMManager {
           this.elements.dmOverlay.style.display = 'none';
         }
       };
+    }
+  }
+
+  // Добавить сообщение игрока в историю
+  appendPlayerMessage(actionText) {
+    if (!this.elements.chatHistory) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message-player';
+    messageDiv.innerHTML = `<div class="message-text">Действие: ${actionText}</div>`;
+    
+    this.elements.chatHistory.appendChild(messageDiv);
+    this._scrollToBottom();
+  }
+
+  // Добавить сообщение AI в историю
+  appendAIMessage(sceneData, callback) {
+    if (!this.elements.chatHistory) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message-ai';
+    
+    let content = '';
+    if (sceneData.title) {
+      content += `<div class="message-title">${sceneData.title}</div>`;
+    }
+    if (sceneData.subtitle) {
+      content += `<div class="message-subtitle">${sceneData.subtitle}</div>`;
+    }
+    content += `<div class="message-text" id="temp-text-${Date.now()}"></div>`; // Temp ID for animation
+    
+    messageDiv.innerHTML = content;
+    this.elements.chatHistory.appendChild(messageDiv);
+    
+    const textEl = messageDiv.querySelector('.message-text');
+    if (sceneData.text && textEl) {
+      typeWriter(sceneData.text, textEl, () => {
+        if (callback) callback();
+        this._scrollToBottom();
+      });
+    } else {
+      if (callback) callback();
+      this._scrollToBottom();
+    }
+  }
+
+  // Прокрутка истории чата вниз
+  _scrollToBottom() {
+    if (this.elements.chatHistory) {
+      this.elements.chatHistory.scrollTop = this.elements.chatHistory.scrollHeight;
+    }
+  }
+
+  // Очистка истории чата (например, при новой игре)
+  clearChatHistory() {
+    if (this.elements.chatHistory) {
+      this.elements.chatHistory.innerHTML = '';
+    }
+  }
+
+  // Показать приветственный экран
+  showWelcome() {
+    if (this.elements.welcomeScreen) {
+      this.elements.welcomeScreen.classList.remove('hidden');
+      this.elements.welcomeScreen.style.display = 'flex';
+    }
+  }
+
+  // Скрыть приветственный экран
+  hideWelcome() {
+    if (this.elements.welcomeScreen) {
+      this.elements.welcomeScreen.classList.add('hidden');
+      setTimeout(() => {
+        this.elements.welcomeScreen.style.display = 'none';
+      }, 500); // Соответствует длительности перехода
     }
   }
 }
