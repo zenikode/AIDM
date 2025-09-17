@@ -184,6 +184,19 @@ export class DOMManager {
     }
   }
 
+  // Показать текст истории с анимацией
+  showStoryText(text, callback) {
+    const storyTextEl = document.getElementById('story-text');
+    if (!storyTextEl) return;
+    typeWriter(text, storyTextEl, callback);
+  }
+
+  // Просто установить текст истории (без анимации)
+  setStoryText(text) {
+    const storyTextEl = document.getElementById('story-text');
+    if (storyTextEl) storyTextEl.textContent = text;
+  }
+
   // Обновление области выбора
   updateChoiceArea(isLoading = false) {
     if (!window.sessionInitialized) {
@@ -317,4 +330,18 @@ export class DOMManager {
       };
     }
   }
+}
+
+
+function typeWriter(text, el, callback) {
+  let i = 0;
+  el.textContent = '';
+  const typing = () => {
+    if (i < text.length) {
+      el.textContent += text.charAt(i);
+      i++;
+      setTimeout(typing, 30);
+    } else if (callback) callback();
+  };
+  typing();
 }
