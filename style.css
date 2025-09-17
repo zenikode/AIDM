@@ -405,7 +405,6 @@ body {
   max-width: 900px;
   margin: 20px auto;
   background: #252525;
-  padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.5);
   display: flex;
@@ -420,7 +419,6 @@ body {
   padding: 15px;
   background: #330000;
   border-radius: 10px;
-  margin-bottom: 15px;
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid #ff6b6b;
   border-radius: 8px;
@@ -1077,7 +1075,6 @@ body {
   gap: 15px;
   justify-content: flex-start; /* Start from left */
   overflow-x: auto; /* Horizontal scroll if cards overflow */
-  padding: 10px 0;
   width: 100%; /* Full width for scrolling */
   scrollbar-width: thin; /* For Firefox */
 }
