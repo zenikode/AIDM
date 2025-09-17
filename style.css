@@ -408,6 +408,12 @@ body {
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 .enemy-box {
   text-align: center;
@@ -415,18 +421,43 @@ body {
   background: #330000;
   border-radius: 10px;
   margin-bottom: 15px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #ff6b6b;
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 150px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 .enemy-name {
   font-size: 1.3em;
   color: #ff6b6b;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 5px;
 }
+
 .enemy-hp {
   font-size: 1.1em;
   color: #ffeaa7;
+  color: #ffcccb;
+  margin-bottom: 5px;
 }
 .status-effects {
   color: #c8d6e5;
   margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+
+.status-tag {
+  background: #333;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
 }
 
 /* История */
@@ -887,7 +918,7 @@ body {
 .chat-history {
   overflow-y: auto;
   margin: 20px auto;
-  padding-top: 64px;
+  padding-top: 192px;
   padding-bottom: 600px;
   max-width: 900px;
 }
@@ -1014,8 +1045,6 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 150;
-  width: 90%;
-  max-width: 400px;
   pointer-events: none; /* Allow clicks through if needed */
 }
 
@@ -1028,4 +1057,66 @@ body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   pointer-events: auto; /* Enable interactions on content */
   margin: 0 auto;
+}
+
+/* Update styles for single row enemy cards with horizontal scroll */
+.battle-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.enemies-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; /* No wrapping, single row */
+  gap: 15px;
+  justify-content: flex-start; /* Start from left */
+  overflow-x: auto; /* Horizontal scroll if cards overflow */
+  padding: 10px 0;
+  width: 100%; /* Full width for scrolling */
+  scrollbar-width: thin; /* For Firefox */
+}
+
+.enemies-container::-webkit-scrollbar {
+  height: 8px; /* Thin horizontal scrollbar */
+}
+
+.enemies-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.enemies-container::-webkit-scrollbar-track {
+  background: #333;
+}
+
+/* Ensure enemy-box fits in row */
+.enemy-box {
+  flex-shrink: 0; /* Prevent shrinking */
+  min-width: 150px; /* Fixed min width per card */
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #ff6b6b;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Responsive: on small screens, allow vertical if needed, but prioritize horizontal */
+@media (max-width: 600px) {
+  .enemies-container {
+    flex-direction: row; /* Keep row, but smaller cards */
+    gap: 10px;
+  }
+  
+  .enemy-box {
+    min-width: 120px;
+    padding: 8px;
+  }
 }

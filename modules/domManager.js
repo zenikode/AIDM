@@ -166,18 +166,40 @@ export class DOMManager {
 
   // Рендеринг врага
   renderEnemy(enemyData) {
-    if (!this.elements.enemyOverlay) return;
+    const enemiesContainer = document.getElementById('enemies-container') || this.elements.battleArea.querySelector('.enemies-container');
+    const overlay = this.elements.enemyOverlay;
 
-    if (enemyData) {
-      this.elements.enemyOverlay.style.display = 'block';
-      if (this.elements.enemyName) this.elements.enemyName.textContent = enemyData.name;
-      if (this.elements.enemyHp) this.elements.enemyHp.textContent = enemyData.hp;
-      if (this.elements.statusEffects) {
-        this.elements.statusEffects.innerHTML = 
-          enemyData.status?.map(status => `<span class="status-tag">${status}</span>`).join(' ') || '';
-      }
+    if (!enemiesContainer || !overlay) return;
+
+    // Clear previous enemies
+    enemiesContainer.innerHTML = '';
+
+    let enemies = [];
+    if (Array.isArray(enemyData)) {
+      enemies = enemyData;
+    } else if (enemyData) {
+      enemies = [enemyData]; // Wrap single in array
+    }
+
+    if (enemies.length > 0) {
+      overlay.style.display = 'block';
+      
+      enemies.forEach(enemy => {
+        const enemyBox = document.createElement('div');
+        enemyBox.className = 'enemy-box';
+        
+        enemyBox.innerHTML = `
+          <div class="enemy-name">${enemy.name || 'Враг'}</div>
+          <div class="enemy-hp">HP: <span>${enemy.hp || '?'}</span></div>
+          <div class="status-effects">
+            ${enemy.status ? enemy.status.map(status => `<span class="status-tag">${status}</span>`).join('') : ''}
+          </div>
+        `;
+        
+        enemiesContainer.appendChild(enemyBox);
+      });
     } else {
-      this.elements.enemyOverlay.style.display = 'none';
+      overlay.style.display = 'none';
     }
   }
 

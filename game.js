@@ -58,7 +58,7 @@ window.onload = async () => {
     if (currentScene) {
       domManager.updateTitles(currentScene);
       domManager.renderAbilities(currentScene.abilities || savedState.player.abilities || []);
-      domManager.renderEnemy(currentScene.enemy);
+      domManager.renderEnemy(currentScene.enemy || []); // Ensure enemy is array
       domManager.renderChoices(currentScene.choices || []);
       
       // Setup choice handlers manually
@@ -264,7 +264,7 @@ async function clearSession() {
   domManager.toggleClearButton(false); // Hide button after clear
 
   // Clear enemy, abilities, etc.
-  domManager.renderEnemy(null);
+  domManager.renderEnemy(null); // Clear all enemies
   domManager.renderAbilities([]);
   domManager.updateTitles({});
   
@@ -373,7 +373,7 @@ function renderScene(data) {
     }
   });
 
-  // Заголовки (update for current, but since no current, perhaps set header)
+  // Заголовки
   domManager.updateTitles({
     title: data.title,
     subtitle: data.subtitle
@@ -382,18 +382,19 @@ function renderScene(data) {
   // Способности
   domManager.renderAbilities(data.abilities || []);
 
-  // Враг
-  domManager.renderEnemy(data.enemy);
+  // Враг - ensure array
+  const enemies = Array.isArray(data.enemy) ? data.enemy : (data.enemy ? [data.enemy] : []);
+  domManager.renderEnemy(enemies);
 
   // Save state after rendering scene
   saveCurrentState();
   
-  // Set currentScene for UI restoration (exclude text to avoid re-append)
+  // Set currentScene - enemy as array
   currentScene = {
     title: data.title,
     subtitle: data.subtitle,
     abilities: data.abilities || [],
-    enemy: data.enemy,
+    enemy: enemies, // Save as array
     choices: data.choices || []
   };
 }
