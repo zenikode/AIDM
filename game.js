@@ -72,22 +72,23 @@ async function initializeSession() {
     addLog('Отправляем запрос к нейросети через медиатор...', 'debug');
     addLog('Сообщение пользователя: ' + JSON.stringify(userPrompt), 'info');
 
-    const initialized = await sceneMediator.initializeSession(systemPrompt, userPrompt);
+    const sceneData = await sceneMediator.initializeSession(systemPrompt, userPrompt);
 
-    if (initialized) {
-      addLog('Медиатор успешно инициализировал сессию', 'success');
+    if (sceneData) {
+      addLog('Медиатор успешно инициализировал сессию и вернул первую сцену', 'success');
       
       sessionInitialized = true;
       window.sessionInitialized = true;
       domManager.updateChoiceArea();
       
-      showApiStatus(`✅ Сессия инициализирована с моделью ${selectedModel}! Нажмите \"Загрузить сцену\"`, 'success');
-      addLog('Сессия успешно инициализирована', 'success');
+      showApiStatus(`✅ Сессия инициализирована с моделью ${selectedModel}!`, 'success');
+      addLog('Сессия успешно инициализирована и первая сцена готова', 'success');
       
-      // Автоматически загружаем первую сцену
-      setTimeout(() => {
-        loadSceneFromAI();
-      }, 1000);
+      // Отрисовка начальной сцены
+      renderScene(sceneData);
+    } else {
+      showApiStatus('❌ Не удалось инициализировать сессию', 'error');
+      addLog('Медиатор не вернул сцену', 'error');
     }
   } catch (error) {
     showApiStatus(`❌ Ошибка инициализации: ${error.message}`, 'error');

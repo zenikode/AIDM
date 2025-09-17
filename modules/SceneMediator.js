@@ -2,7 +2,6 @@
 // Управляет загрузкой сцен и возвращает готовые JSON объекты
 
 import { initializeSessionWithAI, continueConversationWithAI, reformatResponseToJSON } from '../api.js';
-import { extractJsonFromMarkdown } from '../utils.js';
 import { addLog } from '../logger.js';
 
 export class SceneMediator {
@@ -17,7 +16,7 @@ export class SceneMediator {
   async initializeSession(systemPrompt, userPrompt) {
     if (this.isLoading) {
       addLog('Медиатор уже выполняет операцию', 'warning');
-      return;
+      return null;
     }
 
     this.isLoading = true;
@@ -35,8 +34,22 @@ export class SceneMediator {
         ];
         
         addLog('Медиатор: сессия успешно инициализирована', 'success');
+        
+        // Попытка парсинга прямого ответа
+        let sceneData;
+        try {
+          sceneData = JSON.parse(response.trim());
+          addLog('Медиатор: начальная сцена успешно распарсена напрямую', 'success');
+        } catch (e) {
+          addLog('Медиатор: ошибка парсинга начальной сцены, переформатируем', 'warning');
+          const reformatResponse = await reformatResponseToJSON(this.conversationHistory);
+          sceneData = JSON.parse(reformatResponse);
+          addLog('Медиатор: начальная сцена переформатирована', 'success');
+          this.conversationHistory[2].content = reformatResponse;
+        }
+
         this.isLoading = false;
-        return true;
+        return sceneData;
       }
     } catch (error) {
       addLog(`Медиатор: ошибка инициализации: ${error.message}`, 'error');
@@ -45,7 +58,7 @@ export class SceneMediator {
     }
 
     this.isLoading = false;
-    return false;
+    return null;
   }
 
   // Загрузка сцены от нейросети
@@ -68,22 +81,22 @@ export class SceneMediator {
       if (response) {
         addLog('Медиатор: получен ответ от нейросети', 'success');
         
-        // Парсим JSON ответ
+        // Попытка парсинга прямого ответа
         let sceneData;
+        let usedResponse = response;
         try {
-          sceneData = JSON.parse(extractJsonFromMarkdown(response));
-          addLog('Медиатор: JSON успешно распарсен', 'success');
+          sceneData = JSON.parse(response.trim());
+          addLog('Медиатор: сцена успешно распарсена напрямую', 'success');
         } catch (e) {
-          addLog('Медиатор: ошибка парсинга JSON, запрашиваем переформатирование', 'warning');
-          
-          // Если не JSON, просим переформатировать
-          const reformatResponse = await reformatResponseToJSON(this.conversationHistory);
+          addLog('Медиатор: ошибка парсинга сцены, переформатируем', 'warning');
+          const tempHistory = [...this.conversationHistory, { role: "assistant", content: response }];
+          const reformatResponse = await reformatResponseToJSON(tempHistory);
           sceneData = JSON.parse(reformatResponse);
-          addLog('Медиатор: JSON переформатирован', 'success');
+          addLog('Медиатор: сцена переформатирована', 'success');
+          usedResponse = reformatResponse;
         }
 
-        // Добавляем ответ в историю
-        this.conversationHistory.push({ role: "assistant", content: response });
+        this.conversationHistory.push({ role: "assistant", content: usedResponse });
         
         this.isLoading = false;
         return sceneData;
@@ -124,21 +137,22 @@ export class SceneMediator {
       if (response) {
         addLog('Медиатор: получен ответ на действие игрока', 'success');
         
-        // Парсим JSON ответ
+        // Попытка парсинга прямого ответа
         let sceneData;
+        let usedResponse = response;
         try {
-          sceneData = JSON.parse(extractJsonFromMarkdown(response));
-          addLog('Медиатор: JSON ответ успешно распарсен', 'success');
+          sceneData = JSON.parse(response.trim());
+          addLog('Медиатор: ответ на действие успешно распарсен напрямую', 'success');
         } catch (e) {
-          addLog('Медиатор: ошибка парсинга JSON ответа, запрашиваем переформатирование', 'warning');
-          
-          const reformatResponse = await reformatResponseToJSON(this.conversationHistory);
+          addLog('Медиатор: ошибка парсинга ответа на действие, переформатируем', 'warning');
+          const tempHistory = [...this.conversationHistory, { role: "assistant", content: response }];
+          const reformatResponse = await reformatResponseToJSON(tempHistory);
           sceneData = JSON.parse(reformatResponse);
-          addLog('Медиатор: JSON ответ переформатирован', 'success');
+          addLog('Медиатор: ответ на действие переформатирован', 'success');
+          usedResponse = reformatResponse;
         }
 
-        // Добавляем ответ в историю
-        this.conversationHistory.push({ role: "assistant", content: response });
+        this.conversationHistory.push({ role: "assistant", content: usedResponse });
         
         this.isLoading = false;
         return sceneData;
