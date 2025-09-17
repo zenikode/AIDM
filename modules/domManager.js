@@ -343,21 +343,11 @@ export class DOMManager {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message-ai';
     
-    let content = '';
-    if (sceneData.title) {
-      content += `<div class="message-title">${sceneData.title}</div>`;
-    }
-    if (sceneData.subtitle) {
-      content += `<div class="message-subtitle">${sceneData.subtitle}</div>`;
-    }
-    content += `<div class="message-text" id="temp-text-${Date.now()}"></div>`; // Temp ID for animation
+    // Убираем заголовки из сообщения чата
+    let content = `<div class="message-text" id="temp-text-${Date.now()}"></div>`; // Только основной текст
     
     messageDiv.innerHTML = content;
     this.elements.chatHistory.appendChild(messageDiv);
-    messageDiv.scrollIntoView({ 
-      block: 'start', 
-      behavior: 'smooth' 
-    });
     
     const textEl = messageDiv.querySelector('.message-text');
     if (sceneData.text && textEl) {
