@@ -334,7 +334,6 @@ export class DOMManager {
     messageDiv.innerHTML = `<div class="message-text">Действие: ${actionText}</div>`;
     
     this.elements.chatHistory.appendChild(messageDiv);
-    this._scrollToBottom();
   }
 
   // Добавить сообщение AI в историю
@@ -355,23 +354,18 @@ export class DOMManager {
     
     messageDiv.innerHTML = content;
     this.elements.chatHistory.appendChild(messageDiv);
+    messageDiv.scrollIntoView({ 
+      block: 'start', 
+      behavior: 'smooth' 
+    });
     
     const textEl = messageDiv.querySelector('.message-text');
     if (sceneData.text && textEl) {
       typeWriter(sceneData.text, textEl, () => {
         if (callback) callback();
-        this._scrollToBottom();
       });
     } else {
       if (callback) callback();
-      this._scrollToBottom();
-    }
-  }
-
-  // Прокрутка истории чата вниз
-  _scrollToBottom() {
-    if (this.elements.chatHistory) {
-      this.elements.chatHistory.scrollTop = this.elements.chatHistory.scrollHeight;
     }
   }
 
