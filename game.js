@@ -1,6 +1,7 @@
 import { addLog, showApiStatus } from './logger.js';
 import { apiKey, selectedModel, saveSetting, loadSetting, saveGameState, loadGameState } from './storage.js';
 import { loadFile } from './utils.js';
+import { callOpenRouterAPI } from './api.js';
 import { DOMManager } from './modules/domManager.js';
 import { Player } from './modules/Player.js';
 import { SceneMediator } from './modules/SceneMediator.js';
@@ -108,7 +109,8 @@ window.onload = async () => {
           storyPrompt.value = defaultSetting;
         }
       }
-      storyPrompt.addEventListener('input', saveSetting);
+      // Fix: pass value instead of event
+      storyPrompt.addEventListener('input', () => saveSetting(storyPrompt.value));
     }
   }
   // Кнопка инициализации (главная)
@@ -122,8 +124,8 @@ window.onload = async () => {
   // Clear session button handler
   const clearSessionBtn = document.getElementById('clear-session');
   if (clearSessionBtn) {
-    clearSessionBtn.onclick = () => {
-      clearSession();
+    clearSessionBtn.onclick = async () => {
+      await clearSession();
     };
   }
 };
@@ -195,8 +197,52 @@ async function initializeSession() {
   domManager.updateChoiceArea();
 }
 
-// Function to clear session
-function clearSession() {
+// New function to generate session summary
+async function generateSummary() {
+  if (window.chatMessages.length === 0) {
+    return 'Начните новую сессию D&D!';
+  }
+
+  const simpleSummary = `Предыдущая сессия: ${player.name || 'Герой'} в ${currentScene?.title || 'фэнтезийном мире'}, с способностями: ${currentScene?.abilities?.map(a => a.name).join(', ') || 'базовыми'}.`;
+
+  if (!apiKey) {
+    addLog('API ключ отсутствует, используем простую выжимку', 'info');
+    return simpleSummary;
+  }
+
+  try {
+    // Use last 10 messages to avoid token limit
+    const recentMessages = window.chatMessages.slice(-10);
+    const historyText = recentMessages.map(msg => 
+      msg.type === 'player' ? `Игрок: ${msg.content}` : `AI: ${msg.content}`
+    ).join('\n');
+
+    const summaryPrompt = `Сделай краткую выжимку (1-2 предложения) из этой D&D сессии для предыстории новой игры на основе следующих обменов:\n${historyText}`;
+
+    const messages = [
+      { role: "system", content: "Ты помощник для D&D. Создавай краткие, информативные summaries для продолжения приключения." },
+      { role: "user", content: summaryPrompt }
+    ];
+
+    const summary = await callOpenRouterAPI(messages);
+    addLog('Выжимка сессии сгенерирована AI', 'success');
+    return summary.trim() || simpleSummary;
+  } catch (error) {
+    addLog(`Ошибка генерации выжимки: ${error.message}, используем простую`, 'warning');
+    return simpleSummary;
+  }
+}
+
+// Function to clear session (now async)
+async function clearSession() {
+  // Generate summary before clearing
+  const summary = await generateSummary();
+  const storyPrompt = document.getElementById('init-story-prompt');
+  if (storyPrompt) {
+    storyPrompt.value = summary;
+    saveSetting(summary);
+  }
+
   // Clear game state
   localStorage.removeItem('dnd_game_state');
   
@@ -222,8 +268,8 @@ function clearSession() {
   domManager.renderAbilities([]);
   domManager.updateTitles({});
   
-  showApiStatus('✅ Сессия очищена, новая игра', 'success');
-  addLog('Сессия очищена пользователем', 'info');
+  showApiStatus('✅ Сессия очищена, выжимка сохранена в предысторию', 'success');
+  addLog('Сессия очищена с выжимкой', 'info');
 }
 
 // Новая функция отправки действия
