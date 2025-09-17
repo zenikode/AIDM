@@ -87,13 +87,13 @@ body {
     gap: 0; /* No gap between columns */
   }
   .stats-column {
-    width: 25%; /* Compressed to 25% */
+    width: 33%; /* Adjusted to 33% */
     min-width: 0;
     padding: 8px 4px; /* Reduced padding */
     border-right: 1px solid #444; /* Keep thin border */
   }
   .abilities-column {
-    width: 75%; /* Compressed to 75% */
+    width: 67%; /* Adjusted to 67% */
     padding: 8px 4px; /* Reduced padding */
     min-width: 0;
   }
@@ -811,13 +811,13 @@ body {
     gap: 0; /* No gap between columns */
   }
   .stats-column {
-    width: 25%; /* Compressed to 25% */
+    width: 33%; /* Adjusted to 33% */
     min-width: 0;
     padding: 8px 4px; /* Reduced padding */
     border-right: 1px solid #444; /* Keep thin border */
   }
   .abilities-column {
-    width: 75%; /* Compressed to 75% */
+    width: 67%; /* Adjusted to 67% */
     padding: 8px 4px; /* Reduced padding */
     min-width: 0;
   }
