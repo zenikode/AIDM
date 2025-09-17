@@ -83,11 +83,11 @@ window.onload = async () => {
     addLog('Игра восстановлена из сохранения', 'success');
     showApiStatus('✅ Игра продолжена из сохранения', 'success');
     
-    // Optionally, render last scene or prompt to continue
-    // For now, just restore UI and wait for user action
+    domManager.toggleClearButton(true); // Show button when loading save
   } else {
     // Дружелюбный стартовый текст - replaced with welcome screen
     domManager.showWelcome();
+    domManager.toggleClearButton(false); // Ensure hidden on fresh load
 
     // Установить дефолтное пожелание, если поле пустое
     const storyPrompt = document.getElementById('init-story-prompt');
@@ -182,8 +182,7 @@ async function initializeSession() {
       
       // Hide welcome after first message
       domManager.hideWelcome();
-      
-      // Save state after init
+      domManager.toggleClearButton(true); // Show clear button
       saveCurrentState();
     } else {
       showApiStatus('❌ Не удалось инициализировать сессию', 'error');
@@ -262,7 +261,8 @@ async function clearSession() {
   // Show welcome
   domManager.showWelcome();
   domManager.updateChoiceArea();
-  
+  domManager.toggleClearButton(false); // Hide button after clear
+
   // Clear enemy, abilities, etc.
   domManager.renderEnemy(null);
   domManager.renderAbilities([]);

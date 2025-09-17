@@ -12,6 +12,7 @@
   justify-content: space-between;
   border-bottom: 2px solid #333;
 }
+
 .header-btn {
   background: none;
   border: none;
@@ -25,9 +26,34 @@
   transition: background 0.15s;
   order: 2;
 }
+
 .header-btn:hover {
-  background: #23272e;
+  opacity: 0.7;
 }
+
+.clear-session-btn {
+  display: none; /* Initially hidden */
+  background: none;
+  border: none;
+  color: #fbbf24;
+  font-size: 1.5em;
+  margin-left: 0;
+  margin-right: auto;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 10px;
+  transition: background 0.15s;
+  order: 0;
+}
+
+.clear-session-btn:hover {
+  opacity: 0.7;
+}
+
+.clear-session-btn:focus {
+  outline: none;
+}
+
 .header-title {
   flex: 1 1 auto;
   text-align: center;
@@ -35,6 +61,7 @@
   color: #fbbf24;
   font-weight: bold;
   letter-spacing: 1px;
+  order: 1;
 }
 body {
   background-color: #121212;
@@ -52,10 +79,6 @@ body {
   background-repeat: repeat, repeat;
 }
 @media (max-width: 700px) {
-  .header-bar {
-    height: 48px;
-    padding: 0 6px;
-  }
   .header-title {
     font-size: 1.08em;
   }
@@ -70,22 +93,7 @@ body {
   }
 
   .character-card {
-    border-radius: 18px 18px 0 0;
-    min-width: 0;
-    width: 100vw; /* Full viewport width */
     margin: 0; /* No margins to fit exactly */
-  }
-  .card-content-row {
-    flex-direction: row; /* Keep horizontal */
-    padding: 4px; /* Minimal padding */
-    width: 100%;
-    gap: 0; /* No gap between columns */
-  }
-  .stats-column {
-    width: 33%; /* Adjusted to 33% */
-    min-width: 0;
-    padding: 8px 4px; /* Reduced padding */
-    border-right: 1px solid #444; /* Keep thin border */
   }
   .abilities-column {
     width: 67%; /* Adjusted to 67% */
@@ -99,10 +107,6 @@ body {
     min-height: 150px;
     padding: 0 2px; /* Minimal internal padding */
   }
-  .choices-area {
-    border-radius: 14px 14px 0 0;
-    padding: 12px 8px 8px 8px;
-  }
 
   /* Further compress text and elements for fit */
   .stat-horiz-item {
@@ -115,7 +119,6 @@ body {
   }
   .ability {
     padding: 6px 8px; /* Smaller ability padding */
-    margin-bottom: 6px;
     font-size: 0.9em;
   }
   .ability-desc {
@@ -150,25 +153,8 @@ body {
   bottom: 0;
   width: 100wv;
   z-index: 100;
-  background: rgba(18,18,18,0.98);
-  box-shadow: 0 -4px 24px 0 rgba(0,0,0,0.45);
-  padding-top: 10px;
-  padding-bottom: 0;
 }
 
-/* Область выбора внутри карточки */
-.choices-area {
-  background: #23272e;
-  border-radius: 14px 14px 0 0;
-  box-shadow: 0 -2px 16px 0 rgba(0,0,0,0.18);
-  padding: 14px 20px 8px 20px;
-  margin-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  border-bottom: 2px solid #444;
-  z-index: 2;
-}
 .choices-suggestions {
   display: flex;
   flex-direction: column;
@@ -176,11 +162,12 @@ body {
   margin-bottom: 10px;
 }
 .suggestion-btn {
-  background: #353a44;
+  background: #0008;
   color: #e0e0e0;
   border: none;
-  border-radius: 7px;
-  padding: 8px 12px;
+  margin: 0px 8px;
+  border-radius: 8px;
+  padding: 16px;
   font-size: 1em;
   cursor: pointer;
   text-align: left;
@@ -191,10 +178,13 @@ body {
   color: #fff;
 }
 .choices-input-row {
+  background: black;
   display: flex;
   flex-direction: row;
   gap: 8px;
   align-items: center;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 #choice-input {
   flex: 1 1 auto;
@@ -224,11 +214,6 @@ body {
 #choice-send-btn:hover {
   background: #009e7a;
 }
-.choices-area #choices {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
 #choices .choice-btn {
   margin-bottom: 8px;
 }
@@ -237,26 +222,16 @@ body {
 }
 
 .character-card {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
   flex-direction: column;
-  background: #23272e;
-  border-radius: 18px 18px 0 0;
-  min-height: 0;
-  box-shadow: 0 0 24px 0 rgba(0,0,0,0.18);
-  position: relative;
-  flex-wrap: nowrap;
-  border: 2px solid #444;
 }
 
 .card-content-row {
   display: flex;
+  background: black;
   flex-direction: row;
   width: 100%;
   min-height: 0;
   flex: 1 1 auto;
-  padding-bottom: 10px;
 }
 .card-content-row.hidden {
   display: none !important;
@@ -264,21 +239,12 @@ body {
 
 /* Левая колонка: Характеристики (40%) */
 .stats-column {
-  width: 30%;
-  background: #1e1e1e;
-  border-right: 2px solid #444;
-  padding: 15px 10px 10px 10px;
+  width: auto;
+  padding: 16px;
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-}
-
-/* HP и MP в один ряд */
-.hp-mp-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
 }
 
 .hp-mp-item {
@@ -365,11 +331,11 @@ body {
 
 /* Правая колонка: Предметы и навыки (60%) */
 .abilities-column {
-  width: 60%;
   padding: 15px 20px 10px 10px;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
 }
 
 /* abilities-panel занимает всю высоту карточки */
@@ -382,14 +348,13 @@ body {
   background: transparent;
   border-radius: 0;
   padding: 0;
+  border-radius: 16px;
 }
 .ability {
   padding: 10px 14px;
-  margin-bottom: 10px;
   background: none;
-  border-bottom: 1px solid #333;
-  border-radius: 0;
   box-shadow: none;
+  border-radius: 16px;
 }
 .ability:last-child {
   margin-bottom: 0;
@@ -732,9 +697,6 @@ body {
   display: flex;
   align-items: center;
   background: transparent;
-  /* border-radius: 6px; */
-  /* border: 1px solid #555; */
-  padding: 4px 0;
   font-size: 0.98em;
   gap: 4px;
   width: 100%;
@@ -765,17 +727,10 @@ body {
 .hp-mp-row {
   display: flex;
   flex-direction: row;
-  gap: 10px;
-  margin-bottom: 8px;
-  width: 100%;
 }
 .stat-horiz-item.stat-hpmp {
-  background: #222;
-  border-radius: 6px;
-  border: 1.5px solid #555;
   min-width: 70px;
   justify-content: center;
-  padding: 4px 10px;
   width: 100%;
 }
 .stat-horiz-hpmp-value {
@@ -799,18 +754,6 @@ body {
     width: 100vw; /* Full viewport width */
     margin: 0; /* No margins to fit exactly */
   }
-  .card-content-row {
-    flex-direction: row; /* Keep horizontal */
-    padding: 4px; /* Minimal padding */
-    width: 100%;
-    gap: 0; /* No gap between columns */
-  }
-  .stats-column {
-    width: 33%; /* Adjusted to 33% */
-    min-width: 0;
-    padding: 8px 4px; /* Reduced padding */
-    border-right: 1px solid #444; /* Keep thin border */
-  }
   .abilities-column {
     width: 67%; /* Adjusted to 67% */
     padding: 8px 4px; /* Reduced padding */
@@ -822,10 +765,6 @@ body {
     overflow-y: auto;
     min-height: 150px;
     padding: 0 2px; /* Minimal internal padding */
-  }
-  .choices-area {
-    border-radius: 14px 14px 0 0;
-    padding: 12px 8px 8px 8px;
   }
 
   /* Further compress text and elements for fit */
@@ -947,6 +886,7 @@ body {
 .chat-history {
   overflow-y: auto;
   margin: 20px auto;
+  padding-top: 64px;
   padding-bottom: 512px;
   max-width: 900px;
 }
@@ -976,7 +916,7 @@ body {
   margin: 16px;
   margin-left: 64px;
   padding: 16px;
-  background: #333333;
+  background: #222;
   border-radius: 8px;
   border: 1px solid #333;
   text-align: left;
@@ -1087,30 +1027,4 @@ body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   pointer-events: auto; /* Enable interactions on content */
   margin: 0 auto;
-}
-
-.clear-session-btn {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: transparent;
-  border: none;
-  padding: 0;
-  font-size: 20px; /* Larger for emoji visibility */
-  cursor: pointer;
-  z-index: 10;
-  outline: none; /* No outline on focus */
-}
-
-.clear-session-btn:hover {
-  opacity: 0.7; /* Subtle hover effect instead of color change */
-}
-
-.clear-session-btn:focus {
-  outline: none;
-}
-
-/* Ensure header-bar has relative positioning if needed */
-.header-bar {
-  position: relative;
 }

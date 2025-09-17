@@ -423,6 +423,14 @@ export class DOMManager {
       }, 500); // Соответствует длительности перехода
     }
   }
+
+  // New method to toggle clear session button visibility
+  toggleClearButton(show) {
+    const clearBtn = document.getElementById('clear-session');
+    if (clearBtn) {
+      clearBtn.style.display = show ? 'block' : 'none';
+    }
+  }
 }
 
 
