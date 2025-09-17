@@ -28,10 +28,21 @@ window.onload = async () => {
   const storyPrompt = document.getElementById('init-story-prompt');
   if (storyPrompt) {
     const saved = loadSetting();
+    let defaultSetting = 'Классическое фэнтези приключение в мире D&D с элементами исследования, боя и ролевой игры.';
     if (saved) {
       storyPrompt.value = saved;
     } else {
-      storyPrompt.value = await loadFile('default_setting.txt');
+      try {
+        const fileContent = await loadFile('default_setting.txt');
+        if (fileContent && fileContent.trim()) {
+          storyPrompt.value = fileContent.trim();
+        } else {
+          storyPrompt.value = defaultSetting;
+        }
+      } catch (error) {
+        console.warn('Failed to load default_setting.txt:', error);
+        storyPrompt.value = defaultSetting;
+      }
     }
     storyPrompt.addEventListener('input', saveSetting);
   }
