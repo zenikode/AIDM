@@ -276,7 +276,6 @@ export class DOMManager {
     });
 
     if (this.elements.choiceInput) {
-      this.elements.choiceInput.value = '';
       this.elements.choiceInput.disabled = false;
     }
     

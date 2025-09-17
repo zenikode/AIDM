@@ -43,6 +43,7 @@ window.onload = async () => {
     player.update(savedState.player);
     domManager.updatePlayerData(savedState.player);
     sceneMediator.setConversationHistory(savedState.conversationHistory);
+    window.chatMessages = savedState.chatMessages || []; // Restore global chat messages array
     domManager.restoreChatHistory(savedState.chatMessages);
     
     sessionInitialized = true;
@@ -210,13 +211,12 @@ async function generateSummary() {
   }
 
   try {
-    // Use last 10 messages to avoid token limit
-    const recentMessages = window.chatMessages.slice(-10);
-    const historyText = recentMessages.map(msg => 
+    // Use full history for complete summary
+    const historyText = window.chatMessages.map(msg => 
       msg.type === 'player' ? `Игрок: ${msg.content}` : `AI: ${msg.content}`
     ).join('\n');
 
-    const summaryPrompt = `Сделай краткую выжимку (1-2 предложения) из этой D&D сессии для предыстории новой игры на основе следующих обменов:\n${historyText}`;
+    const summaryPrompt = `Сделай краткую выжимку (1-2 предложения) из всей этой D&D сессии для предыстории новой игры на основе следующих обменов:\n${historyText}`;
 
     const messages = [
       { role: "system", content: "Ты помощник для D&D. Создавай краткие, информативные summaries для продолжения приключения." },
@@ -224,7 +224,7 @@ async function generateSummary() {
     ];
 
     const summary = await callOpenRouterAPI(messages);
-    addLog('Выжимка сессии сгенерирована AI', 'success');
+    addLog('Выжимка сессии сгенерирована AI из полной истории', 'success');
     return summary.trim() || simpleSummary;
   } catch (error) {
     addLog(`Ошибка генерации выжимки: ${error.message}, используем простую`, 'warning');

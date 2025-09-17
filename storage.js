@@ -14,7 +14,12 @@ function saveModel(selectedModel) {
 }
 
 function loadModel() {
-  return localStorage.getItem('dnd_model')
+  let model = localStorage.getItem('dnd_model');
+  if (!model) {
+    model = 'openrouter/sonoma-dusk-alpha';
+    saveModel(model); // Set and save default
+  }
+  return model;
 }
 
 export function saveSetting(storyPrompt) {
