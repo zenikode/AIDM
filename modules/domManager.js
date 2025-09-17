@@ -49,7 +49,10 @@ export class DOMManager {
       chatHistory: document.getElementById('chat-history'),
       
       // Приветственный экран
-      welcomeScreen: document.getElementById('welcome-screen')
+      welcomeScreen: document.getElementById('welcome-screen'),
+
+      // Clear button
+      clearSessionBtn: document.getElementById('clear-session')
     };
   }
 
@@ -323,6 +326,8 @@ export class DOMManager {
         }
       };
     }
+
+    // Clear session button handler will be set in game.js
   }
 
   // Добавить сообщение игрока в историю
@@ -334,6 +339,11 @@ export class DOMManager {
     messageDiv.innerHTML = `<div class="message-text">Действие: ${actionText}</div>`;
     
     this.elements.chatHistory.appendChild(messageDiv);
+
+    // Track in global chatMessages
+    if (window.chatMessages) {
+      window.chatMessages.push({ type: 'player', content: actionText });
+    }
   }
 
   // Добавить сообщение AI в историю
@@ -357,12 +367,42 @@ export class DOMManager {
     } else {
       if (callback) callback();
     }
+
+    // Track in global chatMessages
+    if (window.chatMessages && sceneData.text) {
+      window.chatMessages.push({ type: 'ai', content: sceneData.text });
+    }
+  }
+
+  // Restore chat history from saved messages (no animation)
+  restoreChatHistory(messages) {
+    if (!this.elements.chatHistory || !messages) return;
+
+    this.elements.chatHistory.innerHTML = '';
+
+    messages.forEach(msg => {
+      const messageDiv = document.createElement('div');
+      if (msg.type === 'player') {
+        messageDiv.className = 'message-player';
+        messageDiv.innerHTML = `<div class="message-text">Действие: ${msg.content}</div>`;
+      } else if (msg.type === 'ai') {
+        messageDiv.className = 'message-ai';
+        messageDiv.innerHTML = `<div class="message-text">${msg.content}</div>`;
+      }
+      this.elements.chatHistory.appendChild(messageDiv);
+    });
+
+    // Scroll to bottom
+    this.elements.chatHistory.scrollTop = this.elements.chatHistory.scrollHeight;
   }
 
   // Очистка истории чата (например, при новой игре)
   clearChatHistory() {
     if (this.elements.chatHistory) {
       this.elements.chatHistory.innerHTML = '';
+    }
+    if (window.chatMessages) {
+      window.chatMessages = [];
     }
   }
 

@@ -10,7 +10,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
   border-bottom: 2px solid #333;
 }
 .header-btn {
@@ -38,8 +37,6 @@
   letter-spacing: 1px;
 }
 body {
-  padding-top: 56px;
-  padding-bottom: 340px !important;
   background-color: #121212;
   background-image: 
     repeating-linear-gradient(
@@ -63,8 +60,6 @@ body {
     font-size: 1.08em;
   }
   body {
-    padding-top: 48px;
-    padding-bottom: 380px !important; /* Reduced for better mobile fit */
     overflow-x: hidden; /* Prevent horizontal scroll */
   }
 
@@ -1094,13 +1089,28 @@ body {
   margin: 0 auto;
 }
 
-@media (max-width: 700px) {
-  .enemy-overlay {
-    top: 60px;
-    width: 95%;
-  }
-  
-  .battle-area {
-    padding: 12px;
-  }
+.clear-session-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 20px; /* Larger for emoji visibility */
+  cursor: pointer;
+  z-index: 10;
+  outline: none; /* No outline on focus */
+}
+
+.clear-session-btn:hover {
+  opacity: 0.7; /* Subtle hover effect instead of color change */
+}
+
+.clear-session-btn:focus {
+  outline: none;
+}
+
+/* Ensure header-bar has relative positioning if needed */
+.header-bar {
+  position: relative;
 }

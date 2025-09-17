@@ -162,4 +162,14 @@ export class SceneMediator {
     this.sessionInitialized = false;
     addLog('Медиатор: история очищена', 'info');
   }
+
+  // New methods for saving/loading
+  getConversationHistory() {
+    return this.conversationHistory;
+  }
+
+  setConversationHistory(history) {
+    this.conversationHistory = history || [];
+    this.sessionInitialized = !!this.conversationHistory.length;
+  }
 }

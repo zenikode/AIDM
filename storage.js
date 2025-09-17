@@ -25,7 +25,19 @@ export function loadSetting() {
   return localStorage.getItem('dnd_setting');
 }
 
+// New functions for game state
+export function saveGameState(state) {
+  localStorage.setItem('dnd_game_state', JSON.stringify(state));
+}
 
+export function loadGameState() {
+  const saved = localStorage.getItem('dnd_game_state');
+  return saved ? JSON.parse(saved) : null;
+}
+
+export function clearGameState() {
+  localStorage.removeItem('dnd_game_state');
+}
 
 // Обработчик изменения API ключа
 const apiKeyInput = document.getElementById('api-key');
