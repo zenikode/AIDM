@@ -64,7 +64,68 @@ body {
   }
   body {
     padding-top: 48px;
-    padding-bottom: 420px !important;
+    padding-bottom: 380px !important; /* Reduced for better mobile fit */
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+
+  #story-container {
+    width: 100% !important; /* Full width on mobile to avoid zoom */
+    margin: 10px auto;
+    padding: 0 5px; /* Minimal padding */
+  }
+
+  .character-card {
+    border-radius: 18px 18px 0 0;
+    min-width: 0;
+    width: 100vw; /* Full viewport width */
+    margin: 0; /* No margins to fit exactly */
+  }
+  .card-content-row {
+    flex-direction: row; /* Keep horizontal */
+    padding: 4px; /* Minimal padding */
+    width: 100%;
+    gap: 0; /* No gap between columns */
+  }
+  .stats-column {
+    width: 25%; /* Compressed to 25% */
+    min-width: 0;
+    padding: 8px 4px; /* Reduced padding */
+    border-right: 1px solid #444; /* Keep thin border */
+  }
+  .abilities-column {
+    width: 75%; /* Compressed to 75% */
+    padding: 8px 4px; /* Reduced padding */
+    min-width: 0;
+  }
+  .abilities-panel {
+    max-height: none;
+    height: auto;
+    overflow-y: auto;
+    min-height: 150px;
+    padding: 0 2px; /* Minimal internal padding */
+  }
+  .choices-area {
+    border-radius: 14px 14px 0 0;
+    padding: 12px 8px 8px 8px;
+  }
+
+  /* Further compress text and elements for fit */
+  .stat-horiz-item {
+    font-size: 0.85em; /* Smaller font */
+    gap: 2px;
+    padding: 2px;
+  }
+  .stat-horiz-icon {
+    font-size: 0.9em;
+  }
+  .ability {
+    padding: 6px 8px; /* Smaller ability padding */
+    margin-bottom: 6px;
+    font-size: 0.9em;
+  }
+  .ability-desc {
+    font-size: 0.8em;
+    padding-left: 30px;
   }
 }
 
@@ -738,33 +799,59 @@ body {
 
 @media (max-width: 700px) {
   .character-card {
-    flex-direction: column;
     border-radius: 18px 18px 0 0;
     min-width: 0;
+    width: 100vw; /* Full viewport width */
+    margin: 0; /* No margins to fit exactly */
   }
   .card-content-row {
-    flex-direction: column;
-    padding-bottom: 6px;
-  }
-  .stats-column, .abilities-column {
+    flex-direction: row; /* Keep horizontal */
+    padding: 4px; /* Minimal padding */
     width: 100%;
+    gap: 0; /* No gap between columns */
+  }
+  .stats-column {
+    width: 25%; /* Compressed to 25% */
     min-width: 0;
-    padding: 10px 8px;
+    padding: 8px 4px; /* Reduced padding */
+    border-right: 1px solid #444; /* Keep thin border */
+  }
+  .abilities-column {
+    width: 75%; /* Compressed to 75% */
+    padding: 8px 4px; /* Reduced padding */
+    min-width: 0;
   }
   .abilities-panel {
     max-height: none;
-    height: 100%;
-    padding: 0;
+    height: auto;
+    overflow-y: auto;
+    min-height: 150px;
+    padding: 0 2px; /* Minimal internal padding */
   }
   .choices-area {
     border-radius: 14px 14px 0 0;
     padding: 12px 8px 8px 8px;
   }
-  body {
-    padding-bottom: 420px !important;
+
+  /* Further compress text and elements for fit */
+  .stat-horiz-item {
+    font-size: 0.85em; /* Smaller font */
+    gap: 2px;
+    padding: 2px;
+  }
+  .stat-horiz-icon {
+    font-size: 0.9em;
+  }
+  .ability {
+    padding: 6px 8px; /* Smaller ability padding */
+    margin-bottom: 6px;
+    font-size: 0.9em;
+  }
+  .ability-desc {
+    font-size: 0.8em;
+    padding-left: 30px;
   }
 }
-
 .dm-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
