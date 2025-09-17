@@ -12,6 +12,23 @@ export class SceneMediator {
     this.isLoading = false;
   }
 
+  async _parseSceneResponse(response, history) {
+    let sceneData;
+    let usedResponse = response;
+    try {
+      sceneData = JSON.parse(response.trim());
+      addLog('Медиатор: ответ успешно распарсен напрямую', 'success');
+    } catch (e) {
+      addLog('Медиатор: ошибка парсинга ответа, переформатируем', 'warning');
+      const tempHistory = [...history, { role: "assistant", content: response }];
+      const reformatResponse = await reformatResponseToJSON(tempHistory);
+      sceneData = JSON.parse(reformatResponse);
+      addLog('Медиатор: ответ переформатирован', 'success');
+      usedResponse = reformatResponse;
+    }
+    return { sceneData, usedResponse };
+  }
+
   // Инициализация сессии с нейросетью
   async initializeSession(systemPrompt, userPrompt) {
     if (this.isLoading) {
@@ -35,19 +52,9 @@ export class SceneMediator {
         
         addLog('Медиатор: сессия успешно инициализирована', 'success');
         
-        // Попытка парсинга прямого ответа
-        let sceneData;
-        try {
-          sceneData = JSON.parse(response.trim());
-          addLog('Медиатор: начальная сцена успешно распарсена напрямую', 'success');
-        } catch (e) {
-          addLog('Медиатор: ошибка парсинга начальной сцены, переформатируем', 'warning');
-          const reformatResponse = await reformatResponseToJSON(this.conversationHistory);
-          sceneData = JSON.parse(reformatResponse);
-          addLog('Медиатор: начальная сцена переформатирована', 'success');
-          this.conversationHistory[2].content = reformatResponse;
-        }
-
+        const { sceneData, usedResponse } = await this._parseSceneResponse(response, this.conversationHistory);
+        this.conversationHistory[2].content = usedResponse;
+        
         this.isLoading = false;
         return sceneData;
       }
@@ -81,21 +88,7 @@ export class SceneMediator {
       if (response) {
         addLog('Медиатор: получен ответ от нейросети', 'success');
         
-        // Попытка парсинга прямого ответа
-        let sceneData;
-        let usedResponse = response;
-        try {
-          sceneData = JSON.parse(response.trim());
-          addLog('Медиатор: сцена успешно распарсена напрямую', 'success');
-        } catch (e) {
-          addLog('Медиатор: ошибка парсинга сцены, переформатируем', 'warning');
-          const tempHistory = [...this.conversationHistory, { role: "assistant", content: response }];
-          const reformatResponse = await reformatResponseToJSON(tempHistory);
-          sceneData = JSON.parse(reformatResponse);
-          addLog('Медиатор: сцена переформатирована', 'success');
-          usedResponse = reformatResponse;
-        }
-
+        const { sceneData, usedResponse } = await this._parseSceneResponse(response, this.conversationHistory);
         this.conversationHistory.push({ role: "assistant", content: usedResponse });
         
         this.isLoading = false;
@@ -137,21 +130,7 @@ export class SceneMediator {
       if (response) {
         addLog('Медиатор: получен ответ на действие игрока', 'success');
         
-        // Попытка парсинга прямого ответа
-        let sceneData;
-        let usedResponse = response;
-        try {
-          sceneData = JSON.parse(response.trim());
-          addLog('Медиатор: ответ на действие успешно распарсен напрямую', 'success');
-        } catch (e) {
-          addLog('Медиатор: ошибка парсинга ответа на действие, переформатируем', 'warning');
-          const tempHistory = [...this.conversationHistory, { role: "assistant", content: response }];
-          const reformatResponse = await reformatResponseToJSON(tempHistory);
-          sceneData = JSON.parse(reformatResponse);
-          addLog('Медиатор: ответ на действие переформатирован', 'success');
-          usedResponse = reformatResponse;
-        }
-
+        const { sceneData, usedResponse } = await this._parseSceneResponse(response, this.conversationHistory);
         this.conversationHistory.push({ role: "assistant", content: usedResponse });
         
         this.isLoading = false;
