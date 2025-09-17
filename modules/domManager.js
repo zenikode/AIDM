@@ -338,7 +338,10 @@ export class DOMManager {
     messageDiv.innerHTML = `<div class="message-text">Действие: ${actionText}</div>`;
     
     this.elements.chatHistory.appendChild(messageDiv);
-
+    
+    // Scroll to align message at top
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
     // Track in global chatMessages
     if (window.chatMessages) {
       window.chatMessages.push({ type: 'player', content: actionText });
@@ -358,9 +361,14 @@ export class DOMManager {
     messageDiv.innerHTML = content;
     this.elements.chatHistory.appendChild(messageDiv);
     
+    // Scroll to align message at top of screen before typing
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
     const textEl = messageDiv.querySelector('.message-text');
     if (sceneData.text && textEl) {
       typeWriter(sceneData.text, textEl, () => {
+        // Optional scroll after typing if needed
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
         if (callback) callback();
       });
     } else {
@@ -379,7 +387,7 @@ export class DOMManager {
 
     this.elements.chatHistory.innerHTML = '';
 
-    messages.forEach(msg => {
+    messages.forEach((msg, index) => {
       const messageDiv = document.createElement('div');
       if (msg.type === 'player') {
         messageDiv.className = 'message-player';
@@ -389,10 +397,12 @@ export class DOMManager {
         messageDiv.innerHTML = `<div class="message-text">${msg.content}</div>`;
       }
       this.elements.chatHistory.appendChild(messageDiv);
+      
+      // Scroll last message to top
+      if (index === messages.length - 1) {
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     });
-
-    // Scroll to bottom
-    this.elements.chatHistory.scrollTop = this.elements.chatHistory.scrollHeight;
   }
 
   // Очистка истории чата (например, при новой игре)
