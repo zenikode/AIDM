@@ -155,7 +155,7 @@ export class DOMManager {
               this.elements.choiceInput.value += ' ';
             }
             this.elements.choiceInput.value += ab.usage;
-            this.elements.choiceInput.focus();
+            
           }
         };
       }
@@ -291,7 +291,7 @@ export class DOMManager {
       btn.onclick = () => {
         if (this.elements.choiceInput) {
           this.elements.choiceInput.value = choice.text;
-          this.elements.choiceInput.focus();
+          
         }
       };
       this.elements.suggestionsDiv.appendChild(btn);
