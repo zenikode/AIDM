@@ -172,6 +172,7 @@ body {
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
+  animation: fadeIn 0.3s ease-in;
 }
 .suggestion-btn:hover {
   background: #4a5568;
